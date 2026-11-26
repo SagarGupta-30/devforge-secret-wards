@@ -77,7 +77,23 @@ DEVA_SURNAME_NAME = re.compile(
 ADDRESS_LINE_RE = re.compile(r"\bAddress(?:\s*\([^)]*\))?\s*:\s*[^\n]+", re.IGNORECASE)
 ADDRESS_HOUSE_RE = re.compile(r"\b(?:H\.?No\.?|House\s*No\.?|House|Makan\s*No\.?|Makan)\s*[-:\s]*\w+\b", re.IGNORECASE)
 ADDRESS_LANDMARK_RE = re.compile(r"\b(?:near|opp\.?|behind|beside)\s+[A-Za-z0-9\s]+?(?=(?:,|\.|\n|;|-|Vill|Tehsil|Distt?|Ward|Mohalla|$))", re.IGNORECASE)
-ADDRESS_VILLAGE_RE = re.compile(r"\b(?:Vill(?:age|\.)?|Gram|Gaon)\s+[A-Za-z\s]+?(?=(?:,|\.|\n|;|-|Tehsil|Distt?|Ward|Mohalla|$))", re.IGNORECASE)
+# Standalone Gazetteer of villages, tehsils, and localities in UP / India
+GAZETTEER_VILLAGES = {
+    "bilgram", "bhimpur", "sandila", "shahabad", "sawayajpur", "harpalpur",
+    "mallawan", "madhoganj", "beniganj", "kachauna", "pali", "pihani",
+    "gopamau", "kursath", "kalyanpur", "shivrajpur", "bithoor", "ghatampur",
+    "bilhaur", "bansi", "itwa", "dumariyaganj", "shohratgarh", "naugarh",
+    "aliganj", "bakshi ka talab", "mohanlalganj", "malihabad", "sarojini nagar",
+    "chinhat", "kakori", "goshainganj", "amethi", "rampur", "bhagwantpur",
+    "fatehpur", "daulatpur", "mirzapur", "govindpur", "ramnagar", "kishunpur",
+    "chhibramau", "tirwa", "talgram", "harchandpur", "lalganj", "salon",
+    "tiloi", "dhanepur", "mankapur", "tarabganj", "colonelganj", "paraspur"
+}
+
+ADDRESS_VILLAGE_RE = re.compile(
+    r"\b(?:Vill(?:age)?\b|Vill\.|Gram\b|Gaon\b|Post(?:\s*Office)?\b|P\.?O\.?|Tehsil\b|Kasba\b|Town\b|City\b)\s*[:\-]?\s*([A-Za-z\s]+?)(?=(?:,|\.|\n|;|-|\bVill\b|\bGram\b|\bPost\b|\bTehsil\b|\bDistt?\b|\bWard\b|\bMohalla\b|\bPincode\b|\bPin\b|\d|$))",
+    re.IGNORECASE
+)
 ADDRESS_TEHSIL_RE = re.compile(r"\bTehsil\s+[A-Za-z\s]+?(?=(?:,|\.|\n|;|-|Distt?|Vill|$))", re.IGNORECASE)
 ADDRESS_LOCALITY_RE = re.compile(r"\b(?:Mohalla|Bazar|Nagar|Colony|Ganj|Sector)\s+[A-Za-z0-9\s]+?(?=(?:,|\.|\n|;|-|Vill|Tehsil|$))", re.IGNORECASE)
 ADDRESS_WARD_RE = re.compile(r"\bWard\s*\d+\b", re.IGNORECASE)
@@ -89,12 +105,12 @@ HINGLISH_KA_RE = re.compile(r"\b([A-Za-z]+(?:\s+(?:amma|ji|babu|sahab|saheb|didi
 DISCHARGE_NOTE_NAME_RE = re.compile(r"(?:Discharge\s*Note|Note)\s*[:\-]?\s*([A-Za-z]+)\b", re.IGNORECASE)
 
 NAME_LABEL_RE = re.compile(
-    r"\b(?:Patient\s*Name|Patient|Pt\.?|Visitor|Witnessed by|Called by|Referral|Referred to|Ref by)\s*[:\-]?\s*([A-Za-z]+(?:\s+[A-Za-z]+){0,3})",
+    r"\b(?:Patient\s*Name|Patient|Pt\.?|Visitor|Witnessed by|Called by|Referral|Referred to|Ref by)\s*[:\-]?\s*(?!\s*(?:S/o|D/o|W/o|C/o|c/o|Care\s*of|Father|Guardian|Husband|Wife|Son|Daughter|Mother|Age|आयु|DOB|Mob|Phone|Address|Vill|\[RELATIVE_NAME\]))([A-Za-z]+(?:\s+[A-Za-z]+){0,3})",
     re.IGNORECASE
 )
 RELATIVE_RE = re.compile(
-    r"\b(S/o|D/o|W/o|Guardian)\s*[:\-]?\s*([A-Z][a-z]+(?:[^\S\r\n]+[A-Z][a-z]+){0,2})",
-    re.IGNORECASE
+    r"\b(S/o|D/o|W/o|C/o|c/o|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Guardian|Relative|Father(?:'s)?(?:\s*name)?|Husband(?:'s)?(?:\s*name)?|Mother(?:'s)?(?:\s*name)?|Spouse(?:\s*name)?|Pita|Pati|Mata)\b\s*[:\-]?\s*([A-Z][a-z]+(?:[^\S\r\n]+[A-Z][a-z]+){0,2})",
+    re.IGNORECASE | re.UNICODE
 )
 HONORIFIC_RE = re.compile(
     r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:sahab|saheb|ji|didi|bhaiya|bhai|behenji|babu|babuji|amma)\b",
@@ -162,11 +178,29 @@ class PIIExtractor:
         shielded = LOG_VISITOR_RE.sub("[VISITOR_ENTRY]", shielded)
         shielded = ATTENDANT_SAMPLE_RE.sub(f"{p_token}'s attendant", shielded)
         shielded = ATTENDANT_RE.sub("Attendant: [RELATIVE_NAME]", shielded)
+
+        # Relatives & Guardians FIRST before Name Label
+        rel_names_found: set[str] = set()
+        def _repl_rel(m: re.Match) -> str:
+            prefix = m.group(1)
+            sep = ": " if ":" in m.group(0) else " "
+            r_name = m.group(2).strip()
+            if len(r_name) >= 3:
+                rel_names_found.add(r_name)
+            return f"{prefix}{sep}[RELATIVE_NAME]"
+
+        shielded = RELATIVE_RE.sub(_repl_rel, shielded)
+        for r_name in rel_names_found:
+            shielded = re.sub(
+                r"(?<![A-Za-z\u0900-\u097F])" + re.escape(r_name) + r"(?![A-Za-z\u0900-\u097F])",
+                "[RELATIVE_NAME]",
+                shielded
+            )
+
         shielded = CO_CARE_OF_RE.sub("C/O [RELATIVE_NAME]", shielded)
         shielded = HINGLISH_KA_RE.sub(f"{p_token} ka ", shielded)
         shielded = DISCHARGE_NOTE_NAME_RE.sub(f"Discharge Note: {p_token}", shielded)
         shielded = NAME_LABEL_RE.sub(f"Patient Name: {p_token}", shielded)
-        shielded = RELATIVE_RE.sub(r"\1: [RELATIVE_NAME]", shielded)
         shielded = HONORIFIC_RE.sub(p_token, shielded)
         shielded = INITIALS_NAME_RE.sub(p_token, shielded)
 
@@ -186,6 +220,12 @@ class PIIExtractor:
         # 5. Address parts & PIN
         shielded = ADDRESS_LANDMARK_RE.sub("[LANDMARK]", shielded)
         shielded = ADDRESS_VILLAGE_RE.sub("[VILLAGE]", shielded)
+
+        # Standalone gazetteer villages
+        for v_name in sorted(GAZETTEER_VILLAGES, key=lambda x: -len(x)):
+            pat = re.compile(r"(?<![A-Za-z\u0900-\u097F])" + re.escape(v_name) + r"(?![A-Za-z\u0900-\u097F])", re.IGNORECASE)
+            shielded = pat.sub("[VILLAGE]", shielded)
+
         shielded = ADDRESS_TEHSIL_RE.sub("[LOCALITY]", shielded)
         shielded = ADDRESS_LOCALITY_RE.sub("[LOCALITY]", shielded)
         shielded = ADDRESS_WARD_RE.sub("[LOCALITY]", shielded)
@@ -342,8 +382,11 @@ class PIIExtractor:
                         new_dict[clean_k] = "[LOCALITY]"
                     else:
                         new_dict[clean_k] = v
+                # Guardian / Relative names inside parent dict
+                elif parent_key in ("guardian", "relative", "care_of", "contact") and clean_k.lower() in ("name", "first_name", "last_name", "full_name", "display", "text"):
+                    new_dict[clean_k] = "[RELATIVE_NAME]"
                 # Patient names
-                elif any(k in clean_k.lower() for k in ("patient_name", "patient_full_name", "pat_name", "pt_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name")) or (clean_k.lower() in ("name", "patient", "pt") and not is_clinical_org_or_practitioner):
+                elif any(k in clean_k.lower() for k in ("patient_name", "patient_full_name", "pat_name", "pt_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name")) or (clean_k.lower() in ("name", "patient", "pt") and not is_clinical_org_or_practitioner and not isinstance(v, dict)):
                     if isinstance(v, dict):
                         new_dict[clean_k] = {sub_k: p_token for sub_k in v}
                     elif isinstance(v, list):
@@ -352,8 +395,13 @@ class PIIExtractor:
                         new_dict[clean_k] = p_token
                 elif parent_key in ("subject", "patient") and clean_k.lower() == "display" and "Dr." not in str(v):
                     new_dict[clean_k] = p_token
-                elif any(k in clean_k.lower() for k in ("guardian", "relative", "relative_name", "father_name", "husband_name", "spouse", "care_of", "pita/pati", "pita", "pati", "mata", "mother")):
-                    new_dict[clean_k] = "[RELATIVE_NAME]"
+                elif any(k in clean_k.lower() for k in ("guardian", "relative", "relative_name", "father", "husband", "spouse", "care_of", "care of", "c/o", "s/o", "w/o", "d/o", "pita/pati", "mother")) or clean_k.lower() in ("pita", "pati", "mata"):
+                    if isinstance(v, dict):
+                        new_dict[clean_k] = cls.clean_json_value(v, parent_key="guardian", secret=secret, pid=pid, delta_days=delta_days, known_names=known_names)
+                    elif isinstance(v, list):
+                        new_dict[clean_k] = ["[RELATIVE_NAME]" for _ in v]
+                    else:
+                        new_dict[clean_k] = "[RELATIVE_NAME]"
                 elif any(x in clean_k.lower() for x in ("aadhaar", "aadhar")):
                     new_dict[clean_k] = "[AADHAAR]"
                 elif any(x in clean_k.lower() for x in ("phone", "mobile", "callback", "contact_no", "ph_no", "mob", "cell", "telephone")):
@@ -366,7 +414,9 @@ class PIIExtractor:
                     new_dict[clean_k] = generalize_age(v)
                 elif any(k in clean_k.lower() for k in ("birthdate", "birth_date", "birth_dt", "dob", "date_of_birth", "yob", "janm_tithi")):
                     new_dict[clean_k] = shift_date_string(str(v), delta_days) if delta_days else "[DOB]"
-                elif clean_k.lower() in ("village", "gaon", "gram", "city"):
+                elif clean_k.lower() in ("village", "gaon", "gram", "city", "post", "po", "post_office", "dak_ghar"):
+                    new_dict[clean_k] = "[VILLAGE]"
+                elif isinstance(v, str) and v.strip().lower() in GAZETTEER_VILLAGES:
                     new_dict[clean_k] = "[VILLAGE]"
                 elif clean_k.lower() in ("mohalla", "locality", "tehsil", "taluk", "sub_district", "ward_no", "bed_no"):
                     new_dict[clean_k] = "[LOCALITY]"
@@ -441,7 +491,7 @@ class PIIExtractor:
                     cleaned.append(val)
             elif any(k in col for k in ("patient_name", "patient name", "pat_name", "pt_name", "patient_full_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name")) or col in ("name", "patient", "pt"):
                 cleaned.append(p_token)
-            elif any(k in col for k in ("guardian", "relative", "father", "husband", "spouse", "care_of", "care of", "pita/pati", "pita", "pati", "mata", "mother")):
+            elif any(k in col for k in ("guardian", "relative", "relative_name", "father", "husband", "spouse", "care_of", "care of", "c/o", "s/o", "w/o", "d/o", "pita/pati", "mother")) or col in ("pita", "pati", "mata"):
                 cleaned.append("[RELATIVE_NAME]")
             elif any(k in col for k in ("phone", "mobile", "contact", "callback", "cell", "telephone", "mob", "ph_no", "contact_no")):
                 cleaned.append("[PHONE]")
@@ -449,7 +499,9 @@ class PIIExtractor:
                 cleaned.append("[AADHAAR]")
             elif any(k in col for k in ("uhid", "mrn", "patientid", "pat_id", "reg_no", "ipd", "opd", "ip_no", "op_no", "mr_no", "cr_no", "admission_no")):
                 cleaned.append(id_token)
-            elif any(k in col for k in ("city", "village", "gaon", "gram")):
+            elif any(k in col for k in ("city", "village", "gaon", "gram", "post", "po", "post_office", "dak_ghar")):
+                cleaned.append("[VILLAGE]")
+            elif val.strip().lower() in GAZETTEER_VILLAGES:
                 cleaned.append("[VILLAGE]")
             elif any(k in col for k in ("mohalla", "locality", "tehsil", "taluk", "ward_no", "bed_no")):
                 cleaned.append("[LOCALITY]")

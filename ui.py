@@ -142,7 +142,7 @@ st.markdown(
         width: 440px;
         height: 440px;
         background: radial-gradient(circle, rgba(0, 245, 212, 0.22) 0%, transparent 70%);
-        pointer-events: none;
+        pointer-events: none !important;
     }
     div.st-key-dark_hero_container::after {
         content: "";
@@ -152,7 +152,7 @@ st.markdown(
         width: 440px;
         height: 440px;
         background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
-        pointer-events: none;
+        pointer-events: none !important;
     }
     .hero-center-aura {
         position: absolute;
@@ -162,7 +162,7 @@ st.markdown(
         width: 650px;
         height: 380px;
         background: radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.16) 0%, rgba(0, 245, 212, 0.08) 40%, transparent 70%);
-        pointer-events: none;
+        pointer-events: none !important;
     }
     .hero-arch-console {
         position: relative;
@@ -171,7 +171,7 @@ st.markdown(
         margin: 2.2rem auto 0 auto;
         height: 46px;
         perspective: 600px;
-        pointer-events: none;
+        pointer-events: none !important;
     }
     .hero-glass-surface {
         width: 90%;
@@ -183,12 +183,24 @@ st.markdown(
         transform: rotateX(28deg);
         box-shadow: 0 -10px 30px rgba(0, 245, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         backdrop-filter: blur(10px);
+        pointer-events: none !important;
     }
     .hero-floor-reflection {
         width: 100%;
         height: 16px;
         background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 245, 212, 0.04) 30%, transparent 70%);
         filter: blur(4px);
+        pointer-events: none !important;
+    }
+
+    /* Elevate navigation buttons and ensure interactive pointer-events */
+    div.st-key-dark_hero_container div.stButton,
+    div.st-key-dark_hero_container div.stButton > button,
+    div.stButton,
+    div.stButton > button {
+        position: relative !important;
+        z-index: 10 !important;
+        pointer-events: auto !important;
     }
 
     /* All text inside Dark Hero Container: Pure Crisp White */
@@ -659,13 +671,14 @@ st.markdown(
 # =============================================================================
 # State Management & Helpers
 # =============================================================================
+if "page" not in st.session_state:
+    st.session_state.page = "Homepage"
 if "current_page" not in st.session_state:
-    st.session_state.current_page = "Homepage"
+    st.session_state.current_page = st.session_state.page
 
 
 def set_page(name: str):
-    st.session_state.current_page = name
-    st.rerun()
+    st.session_state.update(page=name, current_page=name)
 
 
 # Load practice data output
@@ -713,6 +726,11 @@ def render_top_nav(is_dark: bool = False):
         vertical_alignment="center",
     )
 
+    curr_p = st.session_state.get("page") or st.session_state.get("current_page", "Homepage")
+    st.session_state.page = curr_p
+    st.session_state.current_page = curr_p
+    p_key = str(curr_p)
+
     brand_color = "#FFFFFF" if is_dark else "#0B0D12"
     with c_brand:
         st.markdown(
@@ -727,20 +745,24 @@ def render_top_nav(is_dark: bool = False):
         )
 
     with c_nav1:
-        if st.button("Homepage", key=f"nav_home_{is_dark}", use_container_width=True):
+        if st.button("Homepage", key=f"nav_home_{p_key}", on_click=lambda: set_page("Homepage"), use_container_width=True):
             set_page("Homepage")
+            st.rerun()
 
     with c_nav2:
-        if st.button("Architecture", key=f"nav_arch_{is_dark}", use_container_width=True):
+        if st.button("Architecture", key=f"nav_arch_{p_key}", on_click=lambda: set_page("Architecture"), use_container_width=True):
             set_page("Architecture")
+            st.rerun()
 
     with c_nav3:
-        if st.button("Live Sandbox", key=f"nav_sand_{is_dark}", use_container_width=True):
+        if st.button("Live Sandbox", key=f"nav_sand_{p_key}", on_click=lambda: set_page("Live Sandbox"), use_container_width=True):
             set_page("Live Sandbox")
+            st.rerun()
 
     with c_btn:
-        if st.button("LAUNCH CONSOLE", key=f"nav_launch_{is_dark}", type="primary", use_container_width=True):
+        if st.button("LAUNCH CONSOLE", key=f"nav_launch_console_{p_key}", on_click=lambda: set_page("Live Sandbox"), type="primary", use_container_width=True):
             set_page("Live Sandbox")
+            st.rerun()
 
 
 # =============================================================================
@@ -819,8 +841,9 @@ def render_homepage():
         # Center Hero CTA Button
         c_h1, c_h2, c_h3 = st.columns([2, 1.4, 2], vertical_alignment="center")
         with c_h2:
-            if st.button("GET STARTED ↗", key="hero_get_started", type="primary", use_container_width=True):
+            if st.button("GET STARTED ↗", key="hero_get_started", on_click=lambda: set_page("Live Sandbox"), type="primary", use_container_width=True):
                 set_page("Live Sandbox")
+                st.rerun()
 
         # Architectural Glass Console & Marble Floor Reflection
         st.markdown(
@@ -917,8 +940,9 @@ def render_homepage():
     # CTA Button under banner
     col_c1, col_c2, col_c3 = st.columns([1, 1.2, 1], vertical_alignment="center")
     with col_c2:
-        if st.button("EXPLORE ARCHITECTURE →", key="cta_explore_arch", type="primary", use_container_width=True):
+        if st.button("EXPLORE ARCHITECTURE →", key="cta_explore_arch", on_click=lambda: set_page("Architecture"), type="primary", use_container_width=True):
             set_page("Architecture")
+            st.rerun()
 
     # Footer
     render_footer("GITHUB.COM/SAGARGUPTA-30")
@@ -1689,15 +1713,21 @@ def main():
     st.sidebar.markdown("---")
 
     page_options = ["Homepage", "Architecture", "Live Sandbox"]
-    curr_idx = page_options.index(st.session_state.current_page)
+    curr_page = st.session_state.get("page") or st.session_state.get("current_page", "Homepage")
+    if curr_page not in page_options:
+        curr_page = "Homepage"
+    st.session_state.page = curr_page
+    st.session_state.current_page = curr_page
+
+    curr_idx = page_options.index(curr_page)
     sb_page = st.sidebar.radio(
         "Navigation",
         page_options,
         index=curr_idx,
-        key=f"nav_radio_{st.session_state.current_page}",
+        key=f"nav_radio_{curr_page.replace(' ', '_')}",
     )
-    if sb_page != st.session_state.current_page:
-        st.session_state.current_page = sb_page
+    if sb_page != curr_page:
+        set_page(sb_page)
         st.rerun()
 
     st.sidebar.markdown("---")
@@ -1715,11 +1745,12 @@ def main():
     )
 
     # Route Page
-    if st.session_state.current_page == "Homepage":
+    active_page = st.session_state.get("page") or st.session_state.get("current_page", "Homepage")
+    if active_page == "Homepage":
         render_homepage()
-    elif st.session_state.current_page == "Architecture":
+    elif active_page == "Architecture":
         render_architecture()
-    elif st.session_state.current_page == "Live Sandbox":
+    elif active_page == "Live Sandbox":
         render_live_sandbox()
     else:
         render_homepage()

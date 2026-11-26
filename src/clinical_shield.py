@@ -11,7 +11,7 @@ DR_RE = re.compile(
 
 # Complaints / symptoms: C/O <lowercase symptoms/durations> or Hindi terms
 CO_SYMPTOM_RE = re.compile(
-    r"\bC/O\s*[:\-]?\s*(?:[a-z\u0900-\u097F]+(?:\s+[a-z\u0900-\u097F]+){0,5}(?:\s*x\s*\d+\s*(?:days|d|wks|weeks|months))?)",
+    r"\b[Cc]/[Oo]\s*[:\-]?\s*(?:[a-z\u0900-\u097F]+(?:\s+(?!x\b)[a-z\u0900-\u097F]+){0,5}(?:\s*x\s*\d+\s*(?:days?|d|wks?|weeks?|months?|yrs?|years?))?)",
     re.UNICODE
 )
 
