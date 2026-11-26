@@ -1,7 +1,7 @@
 """
 Generate Project_Brief.pdf (Strictly 2 Pages A4)
 Track 3: Secret Wards — Healthcare Privacy Firewall
-Team: secret-wards-raksha
+Team: devforge-secret-wards
 """
 
 import os
@@ -19,15 +19,16 @@ from pypdf import PdfReader
 
 def create_brief(output_path="Project_Brief.pdf"):
     # A4: 595.27 x 841.89 points
-    # Margins: 0.38 inch = 27.36 pt. Usable width: ~540 pt, Usable height: ~787 pt
-    margin = 28
+    # Margins: 28 pt left/right, 22 pt top/bottom. Usable width: ~540 pt, Usable height: ~798 pt
+    margin_x = 28
+    margin_y = 22
     doc = SimpleDocTemplate(
         output_path,
         pagesize=A4,
-        leftMargin=margin,
-        rightMargin=margin,
-        topMargin=26,
-        bottomMargin=26,
+        leftMargin=margin_x,
+        rightMargin=margin_x,
+        topMargin=margin_y,
+        bottomMargin=margin_y,
     )
 
     styles = getSampleStyleSheet()
@@ -45,8 +46,8 @@ def create_brief(output_path="Project_Brief.pdf"):
         'DocTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=15,
-        leading=18,
+        fontSize=14.5,
+        leading=17,
         textColor=c_primary,
         alignment=TA_LEFT,
         spaceAfter=2,
@@ -60,14 +61,14 @@ def create_brief(output_path="Project_Brief.pdf"):
         leading=11,
         textColor=c_brand,
         alignment=TA_LEFT,
-        spaceAfter=5,
+        spaceAfter=4,
     )
 
     meta_style = ParagraphStyle(
         'MetaStyle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=8,
+        fontSize=7.8,
         leading=10,
         textColor=c_muted,
         alignment=TA_RIGHT,
@@ -77,21 +78,9 @@ def create_brief(output_path="Project_Brief.pdf"):
         'H1',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=10.5,
-        leading=13,
+        fontSize=9.8,
+        leading=12,
         textColor=c_primary,
-        spaceBefore=4,
-        spaceAfter=3,
-        keepWithNext=True,
-    )
-
-    h2_style = ParagraphStyle(
-        'H2',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=9,
-        leading=11,
-        textColor=c_brand,
         spaceBefore=3,
         spaceAfter=2,
         keepWithNext=True,
@@ -101,30 +90,30 @@ def create_brief(output_path="Project_Brief.pdf"):
         'Body',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=8,
-        leading=10.5,
+        fontSize=7.8,
+        leading=10.2,
         textColor=c_dark,
         alignment=TA_JUSTIFY,
-        spaceAfter=3,
+        spaceAfter=2.5,
     )
 
     bullet_style = ParagraphStyle(
         'Bullet',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=7.8,
-        leading=10,
+        fontSize=7.5,
+        leading=9.7,
         textColor=c_dark,
-        leftIndent=10,
-        spaceAfter=2,
+        leftIndent=8,
+        spaceAfter=1.5,
     )
 
     table_cell = ParagraphStyle(
         'TableCell',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=7.5,
-        leading=9.5,
+        fontSize=7.2,
+        leading=9.2,
         textColor=c_dark,
     )
 
@@ -132,8 +121,8 @@ def create_brief(output_path="Project_Brief.pdf"):
         'TableCellBold',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=7.5,
-        leading=9.5,
+        fontSize=7.2,
+        leading=9.2,
         textColor=c_dark,
     )
 
@@ -141,8 +130,8 @@ def create_brief(output_path="Project_Brief.pdf"):
         'TableHeader',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=7.8,
-        leading=10,
+        fontSize=7.5,
+        leading=9.5,
         textColor=colors.white,
         alignment=TA_CENTER,
     )
@@ -157,14 +146,14 @@ def create_brief(output_path="Project_Brief.pdf"):
     header_data = [
         [
             Paragraph("<b>Secret Wards (Raksha): Healthcare Privacy Firewall</b>", title_style),
-            Paragraph("<b>Track 3: Secret Wards</b> · Team: <b>secret-wards-raksha</b><br/>Status: <b>100% Offline • CPU-Only • LLM-Free</b>", meta_style),
+            Paragraph("<b>Track 3: Secret Wards</b> · Team: <b>devforge-secret-wards</b><br/>GitHub: <b>github.com/SagarGupta-30/devforge-secret-wards</b>", meta_style),
         ],
         [
             Paragraph("<i>Deterministic, Multi-Script Cryptographic Privacy Engine for Indian Health Systems</i>", subtitle_style),
-            Paragraph("Codebase: <b>Python 3.10+ Standard Library</b>", meta_style),
+            Paragraph("Status: <b>100% Offline • CPU-Only • LLM-Free</b>", meta_style),
         ]
     ]
-    t_header = Table(header_data, colWidths=[350, 190])
+    t_header = Table(header_data, colWidths=[335, 205])
     t_header.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 1),
@@ -173,7 +162,7 @@ def create_brief(output_path="Project_Brief.pdf"):
         ('RIGHTPADDING', (0,0), (-1,-1), 0),
     ]))
     story.append(t_header)
-    story.append(HRFlowable(width="100%", thickness=1, color=c_border, spaceBefore=3, spaceAfter=4))
+    story.append(HRFlowable(width="100%", thickness=1, color=c_border, spaceBefore=2, spaceAfter=3))
 
     # 1. In One Paragraph
     story.append(Paragraph("1. In One Paragraph", h1_style))
@@ -207,13 +196,13 @@ def create_brief(output_path="Project_Brief.pdf"):
         ('BACKGROUND', (0,0), (-1,-1), c_bg_light),
         ('BOX', (0,0), (-1,-1), 0.75, c_border),
         ('INNERGRID', (0,0), (-1,-1), 0.5, c_border),
-        ('TOPPADDING', (0,0), (-1,-1), 4),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 3),
         ('LEFTPADDING', (0,0), (-1,-1), 5),
         ('RIGHTPADDING', (0,0), (-1,-1), 5),
     ]))
     story.append(t_arch)
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 2))
 
     # 3. How It Works (Part I: Ingestion & Detection)
     story.append(Paragraph("3. How It Works: Ingestion & All-Channel PII Detection", h1_style))
@@ -235,12 +224,12 @@ def create_brief(output_path="Project_Brief.pdf"):
     ))
     story.append(Paragraph(
         "• <b>Full 6-Channel Defense-in-Depth:</b> PII detection operates across all hiding places: (1) Free text content; (2) Filename scrubber renaming files "
-        "containing MRNs/dates/names to `doc_<hmac[:10]>.<ext>`; (3) Base64 encoded attachments (decoded, recursively sanitized, and re-encoded); "
+        "containing MRNs/dates/names to `doc_[hmac_10].[ext]`; (3) Base64 encoded attachments (decoded, recursively sanitized, and re-encoded); "
         "(4) Document metadata (author, title, creation date sanitized); (5) JSON keys and (6) CSV column headers (normalizing Indian clinical variations "
         "such as `pat_name`, `cr_no`, `husband_name`, `mob`, `yob` into canonical non-identifying schema headers).",
         bullet_style
     ))
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 2))
 
     # 4. Core Unique Selling Propositions (USP)
     story.append(Paragraph("4. Core Unique Selling Propositions (USP)", h1_style))
@@ -267,8 +256,8 @@ def create_brief(output_path="Project_Brief.pdf"):
         ('BACKGROUND', (0,0), (-1,-1), c_bg_light),
         ('BOX', (0,0), (-1,-1), 0.5, c_border),
         ('INNERGRID', (0,0), (-1,-1), 0.5, c_border),
-        ('TOPPADDING', (0,0), (-1,-1), 2.5),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2.5),
+        ('TOPPADDING', (0,0), (-1,-1), 2.2),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 2.2),
         ('LEFTPADDING', (0,0), (-1,-1), 5),
         ('RIGHTPADDING', (0,0), (-1,-1), 5),
     ]))
@@ -284,7 +273,7 @@ def create_brief(output_path="Project_Brief.pdf"):
     story.append(Paragraph("5. Cross-Script Linkage & Identity Resolution", h1_style))
     story.append(Paragraph(
         "• <b>Transliteration & Phonetic Canonicalization:</b> Patient records in Indian healthcare frequently alternate between Devanagari script "
-        "and Latin/English transliterations (e.g., <i>'मोहम्मद आरिफ'</i> vs. <i>'Mohd Arif'</i>). Raksha executes lossless script normalization using "
+        "and Latin/English transliterations (e.g., <i>'Mohammad Arif (Devanagari script)'</i> vs. <i>'Mohd Arif'</i>). Raksha executes lossless script normalization using "
         "<code>indic-transliteration</code> (Devanagari \u2192 ITRANS \u2192 lowercase ASCII). Titles and honorifics (<i>'Shri', 'Smt', 'Kumari', 'Md', 'Dr'</i>) "
         "are systematically parsed. Names are converted to Double Metaphone phonetic codes (via <code>jellyfish</code>) and evaluated using token-sort "
         "fuzzy ratios (<code>rapidfuzz</code>) to bridge orthographic spelling discrepancies across rural clinics.",
@@ -297,7 +286,7 @@ def create_brief(output_path="Project_Brief.pdf"):
         "falsely conflating two distinct patients is fatal; our conservative clustering strategy achieved <b>1.00 Precision and 0 False Merges</b>.",
         bullet_style
     ))
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 1.5))
 
     # 6. Privacy vs Utility Trade-Off & Voter-List Defense
     story.append(Paragraph("6. Privacy vs. Utility Trade-Off & Voter-List Defense", h1_style))
@@ -315,7 +304,7 @@ def create_brief(output_path="Project_Brief.pdf"):
         "5-year demographic brackets (e.g., 50\u201354), yielding robust <i>k</i>-anonymity (<i>k</i> \u2265 450 per demographic cluster in district cohorts).",
         bullet_style
     ))
-    story.append(Spacer(1, 2))
+    story.append(Spacer(1, 1.5))
 
     # 7. Empirical Benchmark Table
     story.append(Paragraph("7. Empirical Evaluation on Benchmark Practice Data", h1_style))
@@ -375,14 +364,14 @@ def create_brief(output_path="Project_Brief.pdf"):
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
         ('GRID', (0,0), (-1,-1), 0.5, c_border),
         ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, c_bg_light]),
-        ('TOPPADDING', (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('TOPPADDING', (0,0), (-1,-1), 1.6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 1.6),
         ('LEFTPADDING', (0,0), (-1,-1), 4),
         ('RIGHTPADDING', (0,0), (-1,-1), 4),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
     ]))
     story.append(t_bench)
-    story.append(Spacer(1, 3))
+    story.append(Spacer(1, 2))
 
     # 8. Security Design & Known Limitations
     story.append(Paragraph("8. Security Model, Generalization & Known Limitations", h1_style))

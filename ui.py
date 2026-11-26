@@ -162,6 +162,15 @@ def get_config_paths():
             default_input = args[i + 1]
 
     # Sidebar inputs
+    st.sidebar.markdown("### 🏛️ Team & Repository")
+    st.sidebar.markdown(
+        """
+    - **Team:** `devforge-secret-wards`
+    - **GitHub:** [devforge-secret-wards](https://github.com/SagarGupta-30/devforge-secret-wards)
+    - **Track:** Track 3 (Secret Wards)
+    """
+    )
+    st.sidebar.markdown("---")
     st.sidebar.markdown("### ⚙️ Workspace Configuration")
     output_dir = st.sidebar.text_input("Sanitized Output Dir", value=default_output)
     input_dir = st.sidebar.text_input("Raw Input Dir (Optional)", value=default_input)
@@ -278,10 +287,10 @@ def main():
     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem;">
         <div>
             <h1 style="margin: 0; font-size: 2.2rem; font-weight: 800; color: #f0f6fc;">
-                🛡️ Secret Wards <span style="font-size: 1.3rem; color: #58a6ff; font-weight: 500;">| DPO Privacy Firewall</span>
+                🛡️ Secret Wards <span style="font-size: 1.3rem; color: #58a6ff; font-weight: 500;">| DevForge DPO Privacy Firewall</span>
             </h1>
             <p style="margin: 4px 0 0 0; color: #8b949e; font-size: 0.95rem;">
-                100% Offline • CPU-Only • LLM-Free Clinical De-Identification Engine & Audit Console
+                Team: <b>devforge-secret-wards</b> • 100% Offline • CPU-Only • LLM-Free Clinical De-Identification Console • <a href="https://github.com/SagarGupta-30/devforge-secret-wards" target="_blank" style="color: #58a6ff; text-decoration: none;">GitHub Repo</a>
             </p>
         </div>
         <div style="text-align: right;">

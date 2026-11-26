@@ -1,5 +1,5 @@
-# Secret Wards Privacy Firewall (Track 3)
-**Team:** `secret-wards-raksha` · **Status:** `100% Offline • CPU-Only • LLM-Free • CONTRACT OK`
+# Secret Wards Privacy Firewall (Track 3) — DevForge
+**Team:** [`devforge-secret-wards`](https://github.com/SagarGupta-30/devforge-secret-wards) · **Status:** `100% Offline • CPU-Only • LLM-Free • CONTRACT OK`
 
 A high-performance, deterministic healthcare privacy firewall built for Track 3 ("Secret Wards"). De-identifies heterogeneous, multilingual electronic health records across English, Hindi (Devanagari), and Hinglish in sub-second time without sacrificing medical and epidemiological utility.
 
@@ -116,10 +116,11 @@ A 100% offline, dark-mode Streamlit dashboard (`ui.py`) engineered for the Stage
 
 ## 5. Executive Brief & Setup
 
-### Project Brief PDF
+### Project Brief PDF & Repository
 The official 2-page project brief is frozen at the repository root:
 - **`Project_Brief.pdf`**: Strictly 2 pages A4 adhering to the official Secret Wards template.
 - Built via: `python3 scripts/build_brief.py Project_Brief.pdf`
+- **GitHub Repository**: [`https://github.com/SagarGupta-30/devforge-secret-wards`](https://github.com/SagarGupta-30/devforge-secret-wards)
 
 ### Execution Commands
 
