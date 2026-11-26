@@ -125,8 +125,8 @@ st.markdown(
         background: repeating-linear-gradient(90deg, #070A10, #070A10 13px, #0B111A 13px, #0B111A 17px), linear-gradient(135deg, #070A10 0%, #0D1422 100%) !important;
         background-color: #070A10 !important;
         border-radius: 16px !important;
-        padding: 44px 52px 36px 52px !important;
-        min-height: 540px !important;
+        padding: 36px 48px 32px 48px !important;
+        min-height: 590px !important;
         color: #FFFFFF !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
@@ -164,33 +164,184 @@ st.markdown(
         background: radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.16) 0%, rgba(0, 245, 212, 0.08) 40%, transparent 70%);
         pointer-events: none !important;
     }
-    .hero-arch-console {
-        position: relative;
-        width: 90%;
-        max-width: 820px;
-        margin: 2.2rem auto 0 auto;
-        height: 46px;
-        perspective: 600px;
-        pointer-events: none !important;
+
+    /* Header Navigation Text Links (Dark Mode - Borderless White Text) */
+    div.st-key-dark_nav_home button,
+    div.st-key-dark_nav_arch button,
+    div.st-key-dark_nav_sand button {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        color: #FFFFFF !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
+        padding: 6px 12px !important;
+        text-transform: none !important;
+        letter-spacing: 0.01em !important;
+        border-radius: 0px !important;
+        cursor: pointer !important;
     }
-    .hero-glass-surface {
-        width: 90%;
-        height: 30px;
-        margin: 0 auto;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 70%, transparent 100%);
-        border-top: 1.5px solid rgba(255, 255, 255, 0.35);
-        border-radius: 8px 8px 0 0;
-        transform: rotateX(28deg);
-        box-shadow: 0 -10px 30px rgba(0, 245, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(10px);
-        pointer-events: none !important;
+    div.st-key-dark_nav_home button p,
+    div.st-key-dark_nav_arch button p,
+    div.st-key-dark_nav_sand button p,
+    div.st-key-dark_nav_home button span,
+    div.st-key-dark_nav_arch button span,
+    div.st-key-dark_nav_sand button span {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
+        border: none !important;
+        background: transparent !important;
     }
-    .hero-floor-reflection {
-        width: 100%;
-        height: 16px;
-        background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 245, 212, 0.04) 30%, transparent 70%);
-        filter: blur(4px);
+    div.st-key-dark_nav_home button:hover,
+    div.st-key-dark_nav_arch button:hover,
+    div.st-key-dark_nav_sand button:hover {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        color: #00F5D4 !important;
+        opacity: 0.9 !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    div.st-key-dark_nav_home button:hover p,
+    div.st-key-dark_nav_arch button:hover p,
+    div.st-key-dark_nav_sand button:hover p {
+        color: #00F5D4 !important;
+    }
+
+    /* Top Nav Launch Console Button (Solid Rounded White Pill) */
+    div.st-key-dark_nav_launch button {
+        background: #E8ECEF !important;
+        background-color: #E8ECEF !important;
+        color: #0B0D12 !important;
+        border: none !important;
+        border-radius: 999px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 0.80rem !important;
+        letter-spacing: 0.04em !important;
+        padding: 8px 18px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    }
+    div.st-key-dark_nav_launch button p,
+    div.st-key-dark_nav_launch button span {
+        color: #0B0D12 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.st-key-dark_nav_launch button:hover {
+        background: #FFFFFF !important;
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25) !important;
+    }
+    div.st-key-dark_nav_launch button:hover p,
+    div.st-key-dark_nav_launch button:hover span {
+        color: #000000 !important;
+    }
+
+    /* Header Navigation Text Links (Light Mode - Subpages) */
+    div.st-key-light_nav_home button,
+    div.st-key-light_nav_arch button,
+    div.st-key-light_nav_sand button {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        color: #0B0D12 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.88rem !important;
+        font-weight: 600 !important;
+        padding: 6px 12px !important;
+        text-transform: none !important;
+        letter-spacing: 0.01em !important;
+        border-radius: 0px !important;
+        cursor: pointer !important;
+    }
+    div.st-key-light_nav_home button p,
+    div.st-key-light_nav_arch button p,
+    div.st-key-light_nav_sand button p {
+        color: #0B0D12 !important;
+        font-weight: 600 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.st-key-light_nav_home button:hover,
+    div.st-key-light_nav_arch button:hover,
+    div.st-key-light_nav_sand button:hover {
+        color: #0369A1 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    div.st-key-light_nav_home button:hover p,
+    div.st-key-light_nav_arch button:hover p,
+    div.st-key-light_nav_sand button:hover p {
+        color: #0369A1 !important;
+    }
+    div.st-key-light_nav_launch button {
+        background: #0B0D12 !important;
+        background-color: #0B0D12 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #0B0D12 !important;
+        border-radius: 999px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 0.80rem !important;
+        letter-spacing: 0.04em !important;
+        padding: 8px 18px !important;
+    }
+    div.st-key-light_nav_launch button p,
+    div.st-key-light_nav_launch button span {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+
+    /* Center Hero CTA Button */
+    div.st-key-hero_center_cta button {
+        background-color: #FFFFFF !important;
+        color: #070A10 !important;
+        border: 1px solid #FFFFFF !important;
+        border-radius: 999px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 0.82rem !important;
+        letter-spacing: 0.05em !important;
+        padding: 10px 24px !important;
+        box-shadow: 0 4px 18px rgba(255, 255, 255, 0.25) !important;
+    }
+    div.st-key-hero_center_cta button p,
+    div.st-key-hero_center_cta button span {
+        color: #070A10 !important;
+        font-weight: 800 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.st-key-hero_center_cta button:hover {
+        background-color: #F0EFEB !important;
+        color: #000000 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 24px rgba(255, 255, 255, 0.35) !important;
+    }
+    div.st-key-hero_center_cta button:hover p,
+    div.st-key-hero_center_cta button:hover span {
+        color: #000000 !important;
+    }
+
+    /* Architectural Scene (Desk Silhouette, Monitor, Keyboard, Floor Reflection) */
+    .hero-architectural-scene {
+        position: relative !important;
+        width: 100% !important;
+        height: 125px !important;
+        margin-top: 1.8rem !important;
         pointer-events: none !important;
+        overflow: hidden !important;
     }
 
     /* Elevate navigation buttons and ensure interactive pointer-events */
@@ -253,26 +404,54 @@ st.markdown(
         color: #000000 !important;
         border: none !important;
     }
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] {
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        color: #F1F5F9 !important;
-        border: 1px solid rgba(255, 255, 255, 0.22) !important;
-        font-weight: 600 !important;
-    }
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] p,
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] span {
-        color: #F1F5F9 !important;
-        font-weight: 600 !important;
-        border: none !important;
+
+    /* Clean Borderless Header Navigation Links inside Dark Hero Container */
+    div.st-key-dark_hero_container div.st-key-dark_nav_home div.stButton > button,
+    div.st-key-dark_hero_container div.st-key-dark_nav_arch div.stButton > button,
+    div.st-key-dark_hero_container div.st-key-dark_nav_sand div.stButton > button,
+    div.st-key-dark_hero_container div.st-key-dark_nav_home button,
+    div.st-key-dark_hero_container div.st-key-dark_nav_arch button,
+    div.st-key-dark_hero_container div.st-key-dark_nav_sand button {
         background: transparent !important;
-    }
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover {
-        background-color: rgba(255, 255, 255, 0.20) !important;
-        border-color: #FFFFFF !important;
-    }
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover p,
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover span {
+        background-color: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
         color: #FFFFFF !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
+        padding: 6px 12px !important;
+        text-transform: none !important;
+        letter-spacing: 0.01em !important;
+        border-radius: 0px !important;
+        cursor: pointer !important;
+    }
+    div.st-key-dark_hero_container div.st-key-dark_nav_home div.stButton > button *,
+    div.st-key-dark_hero_container div.st-key-dark_nav_arch div.stButton > button *,
+    div.st-key-dark_hero_container div.st-key-dark_nav_sand div.stButton > button * {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+        text-transform: none !important;
+    }
+    div.st-key-dark_hero_container div.st-key-dark_nav_home div.stButton > button:hover,
+    div.st-key-dark_hero_container div.st-key-dark_nav_arch div.stButton > button:hover,
+    div.st-key-dark_hero_container div.st-key-dark_nav_sand div.stButton > button:hover {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        color: #00F5D4 !important;
+        opacity: 0.9 !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    div.st-key-dark_hero_container div.st-key-dark_nav_home div.stButton > button:hover *,
+    div.st-key-dark_hero_container div.st-key-dark_nav_arch div.stButton > button:hover *,
+    div.st-key-dark_hero_container div.st-key-dark_nav_sand div.stButton > button:hover * {
+        color: #00F5D4 !important;
         border: none !important;
     }
 
@@ -722,7 +901,7 @@ records_data = load_records()
 # =============================================================================
 def render_top_nav(is_dark: bool = False):
     c_brand, c_nav1, c_nav2, c_nav3, c_btn = st.columns(
-        [4.0, 1.5, 1.6, 1.6, 2.2],
+        [4.2, 1.25, 1.4, 1.4, 2.1],
         vertical_alignment="center",
     )
 
@@ -737,32 +916,37 @@ def render_top_nav(is_dark: bool = False):
             clean_html(
                 f"""
                 <div style="cursor: pointer; display: flex; align-items: center; padding-top: 2px;">
-                    <span class="font-anton" style="font-size: 1.45rem; color: {brand_color} !important; letter-spacing: -0.01em; text-transform: uppercase;">DEVFORGE SECRET WARDS</span>
+                    <span class="font-anton" style="font-size: 1.45rem; color: {brand_color} !important; letter-spacing: 0.02em; text-transform: uppercase; font-weight: 700;">DEVFORGE // SECRET WARDS</span>
                 </div>
                 """
             ),
             unsafe_allow_html=True,
         )
 
+    prefix = "dark" if is_dark else "light"
     with c_nav1:
-        if st.button("Homepage", key=f"nav_home_{p_key}", on_click=lambda: set_page("Homepage"), use_container_width=True):
-            set_page("Homepage")
-            st.rerun()
+        with st.container(key=f"{prefix}_nav_home"):
+            if st.button("Homepage", key=f"nav_home_{p_key}", on_click=lambda: set_page("Homepage"), use_container_width=True):
+                set_page("Homepage")
+                st.rerun()
 
     with c_nav2:
-        if st.button("Architecture", key=f"nav_arch_{p_key}", on_click=lambda: set_page("Architecture"), use_container_width=True):
-            set_page("Architecture")
-            st.rerun()
+        with st.container(key=f"{prefix}_nav_arch"):
+            if st.button("Architecture", key=f"nav_arch_{p_key}", on_click=lambda: set_page("Architecture"), use_container_width=True):
+                set_page("Architecture")
+                st.rerun()
 
     with c_nav3:
-        if st.button("Live Sandbox", key=f"nav_sand_{p_key}", on_click=lambda: set_page("Live Sandbox"), use_container_width=True):
-            set_page("Live Sandbox")
-            st.rerun()
+        with st.container(key=f"{prefix}_nav_sand"):
+            if st.button("Live Sandbox", key=f"nav_sand_{p_key}", on_click=lambda: set_page("Live Sandbox"), use_container_width=True):
+                set_page("Live Sandbox")
+                st.rerun()
 
     with c_btn:
-        if st.button("LAUNCH CONSOLE", key=f"nav_launch_console_{p_key}", on_click=lambda: set_page("Live Sandbox"), type="primary", use_container_width=True):
-            set_page("Live Sandbox")
-            st.rerun()
+        with st.container(key=f"{prefix}_nav_launch"):
+            if st.button("LAUNCH CONSOLE", key=f"nav_launch_console_{p_key}", on_click=lambda: set_page("Live Sandbox"), type="primary", use_container_width=True):
+                set_page("Live Sandbox")
+                st.rerun()
 
 
 # =============================================================================
@@ -802,34 +986,19 @@ def render_footer(sub_right: str = "GITHUB.COM/SAGARGUPTA-30"):
 def render_homepage():
     # 1. Unified Dark Fluted Architectural Hero Frame
     with st.container(key="dark_hero_container"):
-        st.markdown(
-            clean_html(
-                """
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.8rem;">
-                    <div class="font-mono" style="font-size: 0.72rem; letter-spacing: 0.15em; color: #94A3B8;">DEVFORGE / SYSTEM 01</div>
-                    <div class="font-mono" style="font-size: 0.72rem; letter-spacing: 0.15em; color: #00F5D4;">● READY TO SUBMIT</div>
-                </div>
-                """
-            ),
-            unsafe_allow_html=True,
-        )
-
-        # Hero Nav inside Frame
+        # Hero Nav inside Frame (Clean Top Row, no DEVFORGE / SYSTEM 01 sub-strip)
         render_top_nav(is_dark=True)
 
         # Hero Center Title & Subtitle with Ambient Aura
         st.markdown(
             clean_html(
                 """
-                <div style="text-align: center; padding: 4.2rem 1rem 1.4rem 1rem; position: relative;">
+                <div style="text-align: center; padding: 2.2rem 1rem 0.6rem 1rem; position: relative;">
                     <div class="hero-center-aura"></div>
-                    <div class="font-mono hero-kicker" style="font-size: 0.76rem; letter-spacing: 0.22em; color: #94A3B8; text-transform: uppercase; margin-bottom: 1.4rem; position: relative; z-index: 2;">
-                        HEALTHCARE PRIVACY FIREWALL / INDIA
-                    </div>
-                    <h1 class="font-anton" style="font-size: 5.4rem; line-height: 0.95; color: #FFFFFF !important; margin: 0 0 1.5rem 0; letter-spacing: -0.02em; position: relative; z-index: 2;">
+                    <h1 class="font-anton" style="font-size: 5.4rem; line-height: 0.95; color: #FFFFFF !important; margin: 0 0 1.4rem 0; letter-spacing: -0.02em; position: relative; z-index: 2;">
                         SHIELD YOUR<br/>PATIENT DATA
                     </h1>
-                    <p class="font-inter hero-sub" style="font-size: 1.15rem; color: #CBD5E1; max-width: 620px; margin: 0 auto 1.5rem auto; line-height: 1.6; position: relative; z-index: 2;">
+                    <p class="font-inter hero-sub" style="font-size: 1.15rem; color: #CBD5E1; max-width: 640px; margin: 0 auto 1.4rem auto; line-height: 1.6; position: relative; z-index: 2;">
                         Offline, CPU-only clinical privacy firewall engineered for zero-leak multilingual Indian health systems.
                     </p>
                 </div>
@@ -838,36 +1007,88 @@ def render_homepage():
             unsafe_allow_html=True,
         )
 
-        # Center Hero CTA Button
-        c_h1, c_h2, c_h3 = st.columns([2, 1.4, 2], vertical_alignment="center")
-        with c_h2:
-            if st.button("GET STARTED ↗", key="hero_get_started", on_click=lambda: set_page("Live Sandbox"), type="primary", use_container_width=True):
-                set_page("Live Sandbox")
-                st.rerun()
+        # Center Hero CTA Button & Micro-Kicker
+        with st.container(key="hero_center_cta"):
+            c_h1, c_h2, c_h3 = st.columns([1.8, 1.4, 1.8], vertical_alignment="center")
+            with c_h2:
+                if st.button("LAUNCH CONSOLE", key="hero_center_launch_console", on_click=lambda: set_page("Live Sandbox"), type="primary", use_container_width=True):
+                    set_page("Live Sandbox")
+                    st.rerun()
 
-        # Architectural Glass Console & Marble Floor Reflection
         st.markdown(
             clean_html(
                 """
-                <div class="hero-arch-console">
-                    <div class="hero-glass-surface"></div>
-                    <div class="hero-floor-reflection"></div>
+                <div class="font-mono" style="font-size: 0.72rem; letter-spacing: 0.22em; color: #94A3B8; text-transform: uppercase; margin-top: 0.8rem; text-align: center; position: relative; z-index: 2;">
+                    OFFLINE BY DESIGN &nbsp;&nbsp;/&nbsp;&nbsp; CPU-ONLY &nbsp;&nbsp;/&nbsp;&nbsp; MULTILINGUAL
                 </div>
                 """
             ),
             unsafe_allow_html=True,
         )
 
-        # Hero Micro Status Bar
+        # Architectural Scene (Translucent Smoked-Glass Desk, Monitor & Keyboard Silhouette, Marble Floor Reflection)
         st.markdown(
             clean_html(
                 """
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem; margin-top: 1.8rem;">
-                    <div class="font-mono" style="font-size: 0.75rem; letter-spacing: 0.15em; color: #94A3B8;">
-                        SYSTEM STATUS &nbsp;<span style="color: #FFFFFF; font-weight: 700;">ALL WARDS PROTECTED</span>
+                <div class="hero-architectural-scene" style="margin-top: 1.0rem;">
+                    <!-- Desk Surface & Smoked-Glass Slab -->
+                    <div style="position: absolute; bottom: 28px; left: 0; right: 0; height: 38px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(30, 41, 59, 0.5) 40%, rgba(7, 10, 16, 0.88) 100%); border-top: 1.5px solid rgba(255, 255, 255, 0.38); box-shadow: 0 -8px 25px rgba(0, 245, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); transform: perspective(800px) rotateX(16deg); transform-origin: bottom center;"></div>
+                    
+                    <!-- Minimalist Dark Monitor + Keyboard Silhouette on Right Side of Desk -->
+                    <div style="position: absolute; bottom: 36px; right: 12%; width: 130px; display: flex; flex-direction: column; align-items: center; z-index: 3;">
+                        <!-- Monitor Screen -->
+                        <div style="width: 100px; height: 58px; background: #080C14; border: 1.5px solid rgba(255, 255, 255, 0.22); border-radius: 5px; position: relative; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.65), 0 0 12px rgba(0, 245, 212, 0.12); overflow: hidden;">
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 100%; background: linear-gradient(180deg, rgba(0, 245, 212, 0.08) 0%, rgba(59, 130, 246, 0.04) 50%, transparent 100%);"></div>
+                            <div style="padding: 6px 8px; display: flex; flex-direction: column; gap: 3px;">
+                                <div style="width: 26px; height: 3px; background: #00F5D4; border-radius: 1px; opacity: 0.85;"></div>
+                                <div style="width: 48px; height: 2px; background: rgba(255,255,255,0.3); border-radius: 1px;"></div>
+                                <div style="width: 38px; height: 2px; background: rgba(255,255,255,0.2); border-radius: 1px;"></div>
+                                <div style="width: 30px; height: 2px; background: #10B981; border-radius: 1px; opacity: 0.7;"></div>
+                            </div>
+                            <div style="position: absolute; top: -15px; right: -15px; width: 35px; height: 80px; background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%); transform: rotate(25deg);"></div>
+                        </div>
+                        <!-- Monitor Stand Neck & Base -->
+                        <div style="width: 7px; height: 8px; background: linear-gradient(90deg, #1E293B, #475569, #1E293B); border: 1px solid rgba(255,255,255,0.15);"></div>
+                        <div style="width: 32px; height: 3px; background: #334155; border-radius: 2px; border: 1px solid rgba(255,255,255,0.25);"></div>
+                        
+                        <!-- Slim Keyboard Silhouette -->
+                        <div style="display: flex; align-items: center; gap: 5px; margin-top: 4px; transform: perspective(400px) rotateX(32deg);">
+                            <div style="width: 60px; height: 12px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.2); border-radius: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; padding: 2px;">
+                                <div style="background: rgba(255,255,255,0.12); border-radius: 1px;"></div>
+                                <div style="background: rgba(255,255,255,0.08); border-radius: 1px;"></div>
+                                <div style="background: rgba(255,255,255,0.08); border-radius: 1px;"></div>
+                                <div style="background: rgba(255,255,255,0.08); border-radius: 1px;"></div>
+                                <div style="background: rgba(255,255,255,0.08); border-radius: 1px;"></div>
+                                <div style="background: rgba(0,245,212,0.3); border-radius: 1px;"></div>
+                            </div>
+                            <div style="width: 10px; height: 12px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255,255,255,0.18); border-radius: 2px;"></div>
+                        </div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00F5D4; box-shadow: 0 0 8px #00F5D4;"></span>
+                    
+                    <!-- Dark Veined-Marble Floor Reflection Base -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 28px; background: linear-gradient(180deg, rgba(7, 10, 16, 0.3) 0%, #070A10 100%), repeating-linear-gradient(65deg, transparent, transparent 18px, rgba(255, 255, 255, 0.025) 19px, transparent 20px), repeating-linear-gradient(-45deg, transparent, transparent 32px, rgba(0, 245, 212, 0.02) 33px, transparent 35px); border-top: 1px solid rgba(255, 255, 255, 0.08); opacity: 0.95;"></div>
+                    <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 70%; height: 20px; background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.09) 0%, rgba(0, 245, 212, 0.04) 40%, transparent 75%); filter: blur(3px);"></div>
+                </div>
+                """
+            ),
+            unsafe_allow_html=True,
+        )
+
+        # Bottom Hairline Footer (2-Column Footer)
+        st.markdown(
+            clean_html(
+                """
+                <div style="border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 1.0rem; margin-top: 1.0rem; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div class="font-mono" style="font-size: 0.68rem; letter-spacing: 0.18em; color: #94A3B8; text-transform: uppercase; margin-bottom: 4px;">
+                            HEALTHCARE PRIVACY FIREWALL
+                        </div>
+                        <div class="font-inter" style="font-size: 0.88rem; color: #E2E8F0; font-weight: 500;">
+                            Patient data stays where care happens.
+                        </div>
+                    </div>
+                    <div class="font-mono" style="font-size: 0.82rem; font-weight: 700; color: #FFFFFF; letter-spacing: 0.08em; text-align: right;">
+                        devforge-secret-wards
                     </div>
                 </div>
                 """
