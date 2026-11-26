@@ -22,3 +22,6 @@ out/
 tmp/
 *.tmp
 *.swp
+
+# Demo recordings
+demo_recording/
