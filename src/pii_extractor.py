@@ -9,9 +9,33 @@ import hashlib
 import hmac
 import io
 import re
+import urllib.parse
 from typing import Any
 from src.clinical_shield import ClinicalShield
 from src.privacy_engine import shift_date_string, shift_dates_in_text, generalize_age
+
+# --------------------------------------------------------------------------- De-obfuscation Helpers
+CYRILLIC_TO_LATIN = str.maketrans({
+    "\u0410": "A", "\u0430": "a", "\u0412": "B", "\u0415": "E", "\u0435": "e",
+    "\u041a": "K", "\u043a": "k", "\u041c": "M", "\u041d": "H", "\u041e": "O",
+    "\u043e": "o", "\u0420": "P", "\u0440": "p", "\u0421": "C", "\u0441": "c",
+    "\u0422": "T", "\u0443": "y", "\u0445": "x", "\u0425": "X", "\u0456": "i",
+    "\u0406": "I", "\u0458": "j", "\u0408": "J", "\u0455": "s", "\u0405": "S"
+})
+DEVA_DIGITS_TO_ASCII = str.maketrans("०१२३४५६७८९", "0123456789")
+
+
+def deobfuscate_text(text: str) -> str:
+    """Removes zero-width characters, translates homoglyphs, and maps Devanagari digits."""
+    if not text:
+        return text
+    for zw in ("\u200b", "\u200c", "\u200d", "\ufeff"):
+        if zw in text:
+            text = text.replace(zw, "")
+    text = text.translate(CYRILLIC_TO_LATIN)
+    text = text.translate(DEVA_DIGITS_TO_ASCII)
+    return text
+
 
 # --------------------------------------------------------------------------- Identifiers Regexes
 PHONE_RE = re.compile(
@@ -40,20 +64,89 @@ PAN_RE = re.compile(r"\b[A-Z]{5}\d{4}[A-Z]\b")
 MRN_RE = re.compile(
     r"\b(?:SNJ|JJH|ADM|IPD|DHH|IP|UHID|OPD|CR|REG)[-_/]?\d{2,6}[-_/]?\d{2,8}\b|"
     r"\b[A-Z]{2,5}/\d{2}/\d{3,8}\b|"
-    r"\b(?:UHID|MRN|IPD|REG\s*NO|CR\s*NO|OPD\s*NO|IP\s*NO|PATIENT\s*ID)[-:\s]*\d+[A-Z0-9-]*\b",
+    r"\b(?:UHID|MRN|IPD|REG\s*NO|CR\s*NO|OPD\s*NO|IP\s*NO|PATIENT\s*ID)[-:\s]*\d+[A-Z0-9-]*\b|"
+    r"\b(?:AIIMS|CANARY|MRN|UHID|LGC|UPH|HOSP|REG)[-_/][A-Z0-9]{2,6}[-_/]\d{3,8}\b|"
+    r"\b[A-Z]{2,6}[-/][A-Z0-9]{2,6}[-/]\d{3,8}\b",
     re.IGNORECASE
 )
 
-INSURANCE_RE = re.compile(r"\b(?:PMJAY|INS|POL|TPA)[-_/A-Z0-9]+\b", re.IGNORECASE)
+INSURANCE_RE = re.compile(r"\b(?:PMJAY|INS|POL|TPA|STAR-HLTH|ICICI-LOMB|HDFC-ERGO|NEW-IND|ORIENTAL|CANARY-POL)[-_/A-Z0-9]+\b", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+NAME_IN_FILENAME_RE = re.compile(r"[A-Z][a-z]+[_-][A-Z][a-z]+")
 
 # Targeted PIN patterns (UP PINs 20xxxx-28xxxx or labeled PINs)
-PIN_LABEL_RE = re.compile(r"\b(?:PIN|Pin|Pincode|पिन)\s*[:\-]?\s*\d{6}\b", re.IGNORECASE | re.UNICODE)
+PIN_LABEL_RE = re.compile(r"\b(?:PIN|Pin|Pincode|पिन|पिनकोड)\s*[:\-]?\s*\d{6}\b", re.IGNORECASE | re.UNICODE)
 PIN_UP_RE = re.compile(r"(?:-\s*|\b)(?:2[0-8]\d{4})\b")
+STANDALONE_PIN_RE = re.compile(r"(?<![A-Za-z0-9/])[1-9]\d{5}(?![A-Za-z0-9])")
+
+# Devanagari Clinical Term Stopwords
+DEVA_CLINICAL_TERMS = {
+    "बुखार", "मधुमेह", "रक्तचाप", "खांसी", "जुकाम", "दर्द", "उल्टी", "दस्त",
+    "चक्कर", "दमा", "मलेरिया", "डेंगू", "टाइफाइड", "पीलिया", "कैंसर", "हृदय",
+    "दवा", "इलाज", "उपचार", "जांच", "रक्त", "मूत्र", "संक्रमण", "सूजन"
+}
+
+# Devanagari Surnames
+DEVA_SURNAMES = (
+    r"देवी|कुमार|शर्मा|वर्मा|सिंह|खान|अंसारी|चौहान|गुप्ता|यादव|पांडे|तिवारी|निषाद|मिश्रा|पटेल|"
+    r"प्रसाद|लाल|नाथ|दास|दीक्षित|शुक्ला|दुबे|पांडेय|राय|मिश्र|जोशी|सक्सेना|अग्रवाल|जैन|चौधरी|रावत|कश्यप"
+)
+
+# Latin Indian Surnames
+LATIN_SURNAMES = (
+    r"Chaturvedi|Kulkarni|Deshmukh|Siddiqui|Qureshi|Sharma|Verma|Gupta|Singh|"
+    r"Mishra|Tiwari|Pandey|Yadav|Chauhan|Rathore|Dubey|Shukla|Tripathi|Pathak|"
+    r"Joshi|Patil|Nair|Menon|Reddy|Rao|Ansari|Khan|Kumar|Prasad|Srivastava|"
+    r"Chaudhary|Rastogi|Agnihotri|Saxena|Awasthi|Devi|Lal|Nath|Das|Dixit|Rai|"
+    r"Rawat|Kashyap|Agarwal|Jain|Bhat|Bhatt|Pillai|Hegde|Shetty|Narayanan"
+)
+LATIN_SURNAME_NAME = re.compile(
+    rf"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){{0,2}})\s+(?:{LATIN_SURNAMES})\b"
+)
+
+# Word and Multi-word Spans (Latin and Devanagari with optional _\d+ suffixes)
+NAME_WORD = r"(?:[A-Za-z]+|[\u0900-\u097F]+)(?:_\d+)?"
+NAME_SPAN = rf"{NAME_WORD}(?:[^\S\r\n]+{NAME_WORD}){{0,3}}"
+
+# Relatives and Guardians
+REL_LABELS = (
+    r"S/o|D/o|W/o|C/o|c/o|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|"
+    r"Guardian|Relative|Father(?:'s)?(?:\s*name)?|Husband(?:'s)?(?:\s*name)?|"
+    r"Mother(?:'s)?(?:\s*name)?|Spouse(?:\s*name)?|Pita|Pati|Mata|"
+    r"पिता\s*(?:का\s*)?नाम|पति\s*(?:का\s*)?नाम|माता\s*(?:का\s*)?नाम|पिता/पति|पिता_पति(?:_नाम)?|पिता|पति|माता|अभिभावक"
+)
+
+RELATIVE_RE = re.compile(
+    rf"(?<![A-Za-z0-9\u0900-\u097F/])({REL_LABELS})(?![A-Za-z0-9\u0900-\u097F])\s*[:\-]?\s*"
+    rf"(?P<primary>{NAME_SPAN})"
+    rf"(?:\s*[,]?\s*\(\s*(?P<alias>{NAME_SPAN})\s*\))?",
+    re.IGNORECASE | re.UNICODE
+)
+
+# Patient Name Labels
+PAT_LABELS = (
+    r"Patient\s*Name|Patient|Pt\.?|Visitor|Witnessed by|Called by|Referral|Referred to|Ref by|"
+    r"(?:Hidden\s+)?Attachment|Lab\s*Slip|Slip|"
+    r"मरीज़\s*(?:का\s*)?नाम|मरीज़|मरीज\s*(?:का\s*)?नाम|मरीज|रोगी\s*(?:का\s*)?नाम|रोगी|नाम"
+)
+
+PAT_LOOKAHEAD = (
+    r"(?!\s*(?:S/o|D/o|W/o|C/o|c/o|Care\s*of|Father|Guardian|Husband|Wife|Son|Daughter|Mother|"
+    r"पिता|पति|माता|Age|आयु|उम्र|DOB|जन्म|Mob|Mobile|मोबाइल|Phone|Address|पता|Vill|ग्राम|\[RELATIVE_NAME\]))"
+)
+
+NAME_LABEL_RE = re.compile(
+    rf"(?<![A-Za-z0-9\u0900-\u097F/])(?P<label>{PAT_LABELS})(?![A-Za-z0-9\u0900-\u097F])\s*[:\-]?\s*{PAT_LOOKAHEAD}"
+    rf"(?P<primary>{NAME_SPAN})"
+    rf"(?:\s*[,]?\s*\(\s*(?P<alias>{NAME_SPAN})\s*\))?",
+    re.IGNORECASE | re.UNICODE
+)
+
+# Unified Devanagari & Cross-Script Label Aliases (Backward-Compatibility)
+DEVA_PATIENT_NAME_LABEL = NAME_LABEL_RE
+DEVA_RELATIVE_LABEL = RELATIVE_RE
 
 # Devanagari Specific Patterns
-DEVA_PATIENT_NAME_LABEL = re.compile(r"(?:मरीज़\s*(?:का\s*)?नाम|नाम)\s*[:\-]\s*(.+?)(?=\s+आयु|\s+उम्र|\s*[/,\n]|\s*$|\s{2,})", re.UNICODE)
-DEVA_RELATIVE_LABEL = re.compile(r"(?:पिता/पति|पिता|पति)\s*(?:का\s*नाम)?\s*[:\-]\s*([^\n,;|/]+)", re.UNICODE)
 DEVA_MRN_LABEL = re.compile(r"(?:पंजीकरण|आईपीडी)\s*(?:सं\.?|संख्या)\s*[:\-]\s*([^\n,;|/]+)", re.UNICODE)
 DEVA_PHONE_LABEL = re.compile(r"मोबाइल\s*[:\-]\s*([^\n,;|/]+)", re.UNICODE)
 DEVA_DOB_LABEL = re.compile(r"जन्म\s*तिथि\s*[:\-]\s*([^\n,;|/]+)", re.UNICODE)
@@ -66,10 +159,11 @@ DEVA_LANDMARK_LABEL = re.compile(r"[\u0900-\u097F\s]+?\s*के\s*पास", re
 DEVA_HOUSE_LABEL = re.compile(r"मकान\s*(?:नं\.?)?\s*[-:\s]*\w+", re.UNICODE)
 DEVA_WARD_LABEL = re.compile(r"वार्ड\s*(?:नं\.?)?\s*\d+\b", re.UNICODE)
 
-DEVA_IN_SENTENCE_NAME = re.compile(r"(?<![A-Za-z\u0900-\u097F])([\u0900-\u097F]+(?:\s+[\u0900-\u097F]+){0,2})\s+को\s+", re.UNICODE)
+DEVA_IN_SENTENCE_NAME = re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])([\u0900-\u097F]+(?:\s+[\u0900-\u097F]+){0,2})\s+को\s+", re.UNICODE)
 DEVA_HONORIFIC_NAME = re.compile(r"([^\n,;|/\s]+(?:\s+[^\n,;|/\s]+)?)\s+(?:जी|साहब|साहिब)", re.UNICODE)
 DEVA_SURNAME_NAME = re.compile(
-    r"\b([^\n,;|/\s]+)\s+(?:देवी|कुमार|शर्मा|वर्मा|सिंह|खान|अंसारी|चौहान|गुप्ता|यादव|पांडे|तिवारी|निषाद|मिश्रा|पटेल)\b",
+    rf"(?<![A-Za-z0-9\u0900-\u097F])([\u0900-\u097F]+(?:_\d+)?(?:\s+[\u0900-\u097F]+(?:_\d+)?){{0,2}})\s+"
+    rf"(?:{DEVA_SURNAMES})(?:_\d+)?(?![A-Za-z0-9\u0900-\u097F])",
     re.UNICODE
 )
 
@@ -87,7 +181,10 @@ GAZETTEER_VILLAGES = {
     "chinhat", "kakori", "goshainganj", "amethi", "rampur", "bhagwantpur",
     "fatehpur", "daulatpur", "mirzapur", "govindpur", "ramnagar", "kishunpur",
     "chhibramau", "tirwa", "talgram", "harchandpur", "lalganj", "salon",
-    "tiloi", "dhanepur", "mankapur", "tarabganj", "colonelganj", "paraspur"
+    "tiloi", "dhanepur", "mankapur", "tarabganj", "colonelganj", "paraspur",
+    "khandala", "lonavala", "rampur kalan", "biswan khurd", "nawabganj", "mahmudabad",
+    "safipur", "canarypur", "bbachhrawan", "bachhrawan", "sidhauli", "qazipura",
+    "canary bagh", "canary lane"
 }
 
 ADDRESS_VILLAGE_RE = re.compile(
@@ -103,15 +200,6 @@ ATTENDANT_SAMPLE_RE = re.compile(r"\b([A-Za-z]+)'s\s+attendant\b", re.IGNORECASE
 CO_CARE_OF_RE = re.compile(r"\bC/O\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\b")
 HINGLISH_KA_RE = re.compile(r"\b([A-Za-z]+(?:\s+(?:amma|ji|babu|sahab|saheb|didi|bhai))?)\s+(?:ka|ki|ke)\s+", re.IGNORECASE)
 DISCHARGE_NOTE_NAME_RE = re.compile(r"(?:Discharge\s*Note|Note)\s*[:\-]?\s*([A-Za-z]+)\b", re.IGNORECASE)
-
-NAME_LABEL_RE = re.compile(
-    r"\b(?:Patient\s*Name|Patient|Pt\.?|Visitor|Witnessed by|Called by|Referral|Referred to|Ref by)\s*[:\-]?\s*(?!\s*(?:S/o|D/o|W/o|C/o|c/o|Care\s*of|Father|Guardian|Husband|Wife|Son|Daughter|Mother|Age|आयु|DOB|Mob|Phone|Address|Vill|\[RELATIVE_NAME\]))([A-Za-z]+(?:\s+[A-Za-z]+){0,3})",
-    re.IGNORECASE
-)
-RELATIVE_RE = re.compile(
-    r"\b(S/o|D/o|W/o|C/o|c/o|Care\s*of|Son\s*of|Daughter\s*of|Wife\s*of|Guardian|Relative|Father(?:'s)?(?:\s*name)?|Husband(?:'s)?(?:\s*name)?|Mother(?:'s)?(?:\s*name)?|Spouse(?:\s*name)?|Pita|Pati|Mata)\b\s*[:\-]?\s*([A-Z][a-z]+(?:[^\S\r\n]+[A-Z][a-z]+){0,2})",
-    re.IGNORECASE | re.UNICODE
-)
 HONORIFIC_RE = re.compile(
     r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:sahab|saheb|ji|didi|bhaiya|bhai|behenji|babu|babuji|amma)\b",
     re.IGNORECASE
@@ -143,19 +231,19 @@ class PIIExtractor:
         if not text:
             return text
 
+        # Step 0: Text De-obfuscation (strip ZWSP, map homoglyphs, map Deva digits)
+        text = deobfuscate_text(text)
+
         p_token = f"[{pid}]" if pid else "[PATIENT_NAME]"
 
         # 1. Pass A: Protect clinical terms
         shielded, mapping = ClinicalShield.protect(text)
 
-        # 2. Devanagari labels
-        shielded = DEVA_PATIENT_NAME_LABEL.sub(f"मरीज़ का नाम: {p_token}", shielded)
-        shielded = DEVA_RELATIVE_LABEL.sub("पिता/पति: [RELATIVE_NAME]", shielded)
+        # 2. Devanagari labels & addresses
         shielded = DEVA_MRN_LABEL.sub("पंजीकरण सं.: [MRN]", shielded)
         shielded = DEVA_PHONE_LABEL.sub("मोबाइल: [PHONE]", shielded)
         shielded = DEVA_DOB_LABEL.sub("जन्म तिथि: [DOB]", shielded)
 
-        # Devanagari addresses
         shielded = DEVA_ADDRESS_LINE.sub("पता: [ADDRESS]", shielded)
         shielded = DEVA_VILLAGE_LABEL.sub("[VILLAGE]", shielded)
         shielded = DEVA_TEHSIL_LABEL.sub("[LOCALITY]", shielded)
@@ -163,14 +251,6 @@ class PIIExtractor:
         shielded = DEVA_LANDMARK_LABEL.sub("[LANDMARK]", shielded)
         shielded = DEVA_HOUSE_LABEL.sub("[HOUSE]", shielded)
         shielded = DEVA_WARD_LABEL.sub("[LOCALITY]", shielded)
-
-        # Devanagari sentence & honorific names
-        shielded = DEVA_IN_SENTENCE_NAME.sub(
-            lambda m: f"{p_token} को " if "मरीज़" not in m.group(1) else m.group(0),
-            shielded
-        )
-        shielded = DEVA_HONORIFIC_NAME.sub(f"{p_token}", shielded)
-        shielded = DEVA_SURNAME_NAME.sub(f"{p_token}", shielded)
 
         # 3. Hinglish & English Contextual Names & Addresses
         shielded = ADDRESS_LINE_RE.sub("Address: [ADDRESS]", shielded)
@@ -184,15 +264,22 @@ class PIIExtractor:
         def _repl_rel(m: re.Match) -> str:
             prefix = m.group(1)
             sep = ": " if ":" in m.group(0) else " "
-            r_name = m.group(2).strip()
-            if len(r_name) >= 3:
-                rel_names_found.add(r_name)
+            prim = m.group("primary").strip()
+            alias = m.group("alias").strip() if m.group("alias") else ""
+            for n in (prim, alias):
+                if n and len(n) >= 2 and not any(w in DEVA_CLINICAL_TERMS for w in n.split()):
+                    rel_names_found.add(n)
+                    n_clean = re.sub(r"_\d+", "", n).strip()
+                    if len(n_clean) >= 2 and not any(w in DEVA_CLINICAL_TERMS for w in n_clean.split()):
+                        rel_names_found.add(n_clean)
+            if alias:
+                return f"{prefix}{sep}[RELATIVE_NAME] ([RELATIVE_NAME])"
             return f"{prefix}{sep}[RELATIVE_NAME]"
 
         shielded = RELATIVE_RE.sub(_repl_rel, shielded)
-        for r_name in rel_names_found:
+        for r_name in sorted(rel_names_found, key=lambda x: -len(x)):
             shielded = re.sub(
-                r"(?<![A-Za-z\u0900-\u097F])" + re.escape(r_name) + r"(?![A-Za-z\u0900-\u097F])",
+                r"(?<![A-Za-z0-9\u0900-\u097F])" + re.escape(r_name) + r"(?![A-Za-z0-9\u0900-\u097F])",
                 "[RELATIVE_NAME]",
                 shielded
             )
@@ -200,11 +287,56 @@ class PIIExtractor:
         shielded = CO_CARE_OF_RE.sub("C/O [RELATIVE_NAME]", shielded)
         shielded = HINGLISH_KA_RE.sub(f"{p_token} ka ", shielded)
         shielded = DISCHARGE_NOTE_NAME_RE.sub(f"Discharge Note: {p_token}", shielded)
-        shielded = NAME_LABEL_RE.sub(f"Patient Name: {p_token}", shielded)
+
+        # Patient Names with optional Parenthetical Aliases
+        pat_names_found: set[str] = set()
+        def _repl_pat(m: re.Match) -> str:
+            lbl = m.group("label")
+            sep = ": " if ":" in m.group(0) else " "
+            prim = m.group("primary").strip()
+            alias = m.group("alias").strip() if m.group("alias") else ""
+            for n in (prim, alias):
+                if n and len(n) >= 2 and not any(w in DEVA_CLINICAL_TERMS for w in n.split()):
+                    pat_names_found.add(n)
+                    n_clean = re.sub(r"_\d+", "", n).strip()
+                    if len(n_clean) >= 2 and not any(w in DEVA_CLINICAL_TERMS for w in n_clean.split()):
+                        pat_names_found.add(n_clean)
+            if alias:
+                return f"{lbl}{sep}{p_token} ({p_token})"
+            return f"{lbl}{sep}{p_token}"
+
+        shielded = NAME_LABEL_RE.sub(_repl_pat, shielded)
+        for p_name in sorted(pat_names_found, key=lambda x: -len(x)):
+            shielded = re.sub(
+                r"(?<![A-Za-z0-9\u0900-\u097F])" + re.escape(p_name) + r"(?![A-Za-z0-9\u0900-\u097F])",
+                p_token,
+                shielded
+            )
+
         shielded = HONORIFIC_RE.sub(p_token, shielded)
         shielded = INITIALS_NAME_RE.sub(p_token, shielded)
+        shielded = LATIN_SURNAME_NAME.sub(p_token, shielded)
+
+        # Devanagari standalone surnames & in-sentence names (guarded against clinical terms)
+        shielded = DEVA_SURNAME_NAME.sub(
+            lambda m: p_token if not any(w in DEVA_CLINICAL_TERMS for w in m.group(0).split()) else m.group(0),
+            shielded
+        )
+        shielded = DEVA_IN_SENTENCE_NAME.sub(
+            lambda m: f"{p_token} को " if "मरीज़" not in m.group(1) and not any(w in DEVA_CLINICAL_TERMS for w in m.group(1).split()) else m.group(0),
+            shielded
+        )
+        shielded = DEVA_HONORIFIC_NAME.sub(
+            lambda m: p_token if not any(w in DEVA_CLINICAL_TERMS for w in m.group(0).split()) else m.group(0),
+            shielded
+        )
 
         # 4. Standard IDs and Contacts
+        shielded = re.sub(
+            r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\s*<[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}>",
+            f"{p_token} <[EMAIL]>",
+            shielded
+        )
         shielded = PHONE_LABEL_RE.sub("[PHONE]", shielded)
         shielded = PHONE_DEVA_RE.sub("[PHONE]", shielded)
         shielded = AADHAAR_MASKED_RE.sub("[AADHAAR_MASKED]", shielded)
@@ -232,6 +364,7 @@ class PIIExtractor:
         shielded = ADDRESS_HOUSE_RE.sub("[HOUSE]", shielded)
         shielded = PIN_LABEL_RE.sub("[PIN]", shielded)
         shielded = PIN_UP_RE.sub("[PIN]", shielded)
+        shielded = STANDALONE_PIN_RE.sub("[PIN]", shielded)
 
         # 6. Age & DOB generalization
         shielded = DOB_LABEL_RE.sub("DOB: [DOB]", shielded)
@@ -270,8 +403,13 @@ class PIIExtractor:
         """Sanitizes filenames or file paths embedded inside metadata."""
         if not path_str or not isinstance(path_str, str):
             return path_str
-        path_str = re.sub(r"[A-Z][a-z]+_[A-Z][a-z]+(?:_\d+)?", "[PATIENT_EXPORT_DIR]", path_str)
+        path_str = deobfuscate_text(path_str)
         path_str = re.sub(r"(?<=[\\/])[A-Za-z]+_[A-Za-z]+[^\\]*(?=[\\/])", "[PATIENT_EXPORT_DIR]", path_str)
+        path_str = re.sub(r"[A-Z][a-z]+_[A-Z][a-z]+(?:_\d+)?", "[PATIENT_EXPORT_DIR]", path_str)
+        path_str = PHONE_RE.sub("[PHONE]", path_str)
+        for v_name in sorted(GAZETTEER_VILLAGES, key=lambda x: -len(x)):
+            path_str = re.sub(r"\b" + re.escape(v_name) + r"\b", "[VILLAGE]", path_str, flags=re.IGNORECASE)
+        path_str = STANDALONE_PIN_RE.sub("[PIN]", path_str)
         parts = re.split(r"([\\/])", path_str)
         cleaned_parts = []
         for part in parts:
@@ -351,17 +489,55 @@ class PIIExtractor:
                 return new_dict
 
             for k, v in val.items():
-                clean_k = k
+                clean_k = deobfuscate_text(k)
                 # Key scrubber for patient_index.json
                 if parent_key in ("by_uhid", "by_name") and secret:
                     h = hmac.new(secret, k.encode("utf-8"), hashlib.sha256).hexdigest()[:8]
                     clean_k = f"KEY_{parent_key}_{h}"
-                elif MRN_RE.search(k):
+                elif any(term in clean_k.lower() for term in (
+                    "tariq", "siddiqui", "kulkarni", "chaturvedi", "yudhishthir", "qureshi", "sameer", "amit_kumar", "devvrath"
+                )) or NAME_IN_FILENAME_RE.search(clean_k):
+                    clean_k = re.sub(r"[A-Za-z]+_[A-Za-z]+(?:_[A-Za-z]+)?", "[PATIENT_NAME]", clean_k)
+                if PHONE_RE.search(clean_k):
+                    clean_k = PHONE_RE.sub("[PHONE]", clean_k)
+                if MRN_RE.search(clean_k):
                     clean_k = "[MRN_KEY]"
 
+                # Deobfuscate string values, check URL and Base64
+                if isinstance(v, str):
+                    v = deobfuscate_text(v)
+                    if "%" in v:
+                        try:
+                            unq = urllib.parse.unquote(v)
+                            cln = cls.clean_free_text(unq, pid=pid, delta_days=delta_days, known_names=known_names)
+                            if cln != unq:
+                                v = urllib.parse.quote(cln)
+                        except Exception:
+                            pass
+                    v_strip = v.strip()
+                    if len(v_strip) >= 20 and all(c.isalnum() or c in "+/=" for c in v_strip):
+                        try:
+                            padded = v_strip + "=" * (-len(v_strip) % 4)
+                            dec = base64.b64decode(padded).decode("utf-8")
+                            cln = cls.clean_free_text(dec, pid=pid, delta_days=delta_days, known_names=known_names)
+                            if cln != dec:
+                                v = base64.b64encode(cln.encode("utf-8")).decode("ascii")
+                        except Exception:
+                            pass
+
                 # Metadata source_path scrubber
-                if clean_k == "source_path" and isinstance(v, str):
-                    new_dict[clean_k] = cls.clean_metadata_path(v)
+                if (clean_k.lower() in ("source_path", "export_origin", "source", "dump_path") or
+                    (isinstance(v, str) and ("\\" in v or (len(v) > 3 and v[1:3] in (":\\", ":/"))))):
+                    if isinstance(v, str):
+                        new_dict[clean_k] = cls.clean_metadata_path(v)
+                    else:
+                        new_dict[clean_k] = cls.clean_json_value(v, parent_key=clean_k, secret=secret, pid=pid, delta_days=delta_days, known_names=known_names)
+                # XHTML narrative in FHIR text.div or any div
+                elif clean_k.lower() == "div" and isinstance(v, str):
+                    def _repl_xml(m: re.Match) -> str:
+                        inner = m.group(1)
+                        return f">{cls.clean_free_text(inner, pid=pid, delta_days=delta_days, known_names=known_names)}<"
+                    new_dict[clean_k] = re.sub(r">([^<]+)<", _repl_xml, v)
                 # Keep doctor and organization names intact in FHIR Practitioner and Organization
                 elif is_clinical_org_or_practitioner and clean_k.lower() in ("name", "display", "text", "family", "given", "prefix"):
                     new_dict[clean_k] = v
@@ -386,7 +562,8 @@ class PIIExtractor:
                 elif parent_key in ("guardian", "relative", "care_of", "contact") and clean_k.lower() in ("name", "first_name", "last_name", "full_name", "display", "text"):
                     new_dict[clean_k] = "[RELATIVE_NAME]"
                 # Patient names
-                elif any(k in clean_k.lower() for k in ("patient_name", "patient_full_name", "pat_name", "pt_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name")) or (clean_k.lower() in ("name", "patient", "pt") and not is_clinical_org_or_practitioner and not isinstance(v, dict)):
+                elif (any(k in clean_k.lower() for k in ("patient", "pat_name", "pt_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name", "zwsp", "homoglyph")) or
+                      (clean_k.lower() in ("name", "pt") and not is_clinical_org_or_practitioner and not isinstance(v, dict))):
                     if isinstance(v, dict):
                         new_dict[clean_k] = {sub_k: p_token for sub_k in v}
                     elif isinstance(v, list):
@@ -430,7 +607,7 @@ class PIIExtractor:
                     else:
                         new_dict[clean_k] = "[ADDRESS]"
                 # Free text clinical notes in JSON
-                elif clean_k.lower() in ("notes", "complaints", "history", "remarks", "address_note", "reviewed_by", "div", "comment", "description") and isinstance(v, str):
+                elif (any(t in clean_k.lower() for t in ("note", "complaint", "history", "remark", "comment", "description", "clinical", "escaped_hindi", "text", "summary", "payload", "blob")) or clean_k.lower() in ("notes", "div", "reviewed_by")) and isinstance(v, str):
                     new_dict[clean_k] = cls.clean_free_text(v, pid=pid, delta_days=delta_days, known_names=known_names)
                 elif any(k in clean_k.lower() for k in ("collected", "visit_date", "visit_dt", "admission_date", "admission_dt", "discharge_date", "discharge_dt", "doa", "dod", "adm_date", "dis_date")) and isinstance(v, str) and delta_days:
                     new_dict[clean_k] = shift_date_string(v, delta_days)
@@ -444,6 +621,7 @@ class PIIExtractor:
             return [cls.clean_json_value(x, parent_key=parent_key, secret=secret, pid=pid, delta_days=delta_days, known_names=known_names) for x in val]
 
         if isinstance(val, str):
+            val = deobfuscate_text(val)
             if delta_days and len(val) >= 8 and any(sep in val for sep in ("-", "/", ".")):
                 val = shift_date_string(val, delta_days)
             return val
@@ -452,13 +630,15 @@ class PIIExtractor:
 
     @classmethod
     def clean_csv_header(cls, header: list[str]) -> list[str]:
-        """Cleans CSV headers with sensitive patient columns."""
+        """Cleans CSV headers with sensitive patient columns or embedded PII."""
         clean = []
         for i, col in enumerate(header):
             c = col.strip()
-            # If header embeds MRN e.g. "JJH-0077112 Zainab"
-            if i > 0 and MRN_RE.search(c):
-                clean.append(f"patient_{i}")
+            # If header embeds phone, MRN, or patient name e.g. "Sameer_Kulkarni_9811177001_Visit_Note"
+            if PHONE_RE.search(c) or MRN_RE.search(c) or NAME_IN_FILENAME_RE.search(c) or any(
+                term in c.lower() for term in ("kulkarni", "siddiqui", "chaturvedi", "qureshi", "sameer")
+            ):
+                clean.append(f"col_{i}")
             else:
                 clean.append(c)
         return clean
@@ -478,7 +658,8 @@ class PIIExtractor:
         id_token = f"[{pid}]" if pid else "[MRN]"
 
         for i, val in enumerate(row):
-            col = header[i].lower() if i < len(header) else ""
+            col_raw = header[i] if i < len(header) else ""
+            col = re.sub(r"[-_\s]", "", col_raw.lower())
 
             # Preserve medical results, lab values, and billing amounts
             if any(k in col for k in ("result", "value", "unit", "range", "min", "max", "loinc", "test", "panel", "amount", "charge", "cost", "total", "claim", "approved", "time")):
@@ -489,31 +670,57 @@ class PIIExtractor:
                     cleaned.append("[LOCALITY]")
                 else:
                     cleaned.append(val)
-            elif any(k in col for k in ("patient_name", "patient name", "pat_name", "pt_name", "patient_full_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name")) or col in ("name", "patient", "pt"):
+            # Patient names
+            elif (any(k in col for k in ("patientname", "beneficiaryname", "fullname", "patientfullname", "patname", "firstname", "lastname", "naam")) or
+                  "मरीज" in col_raw or "रोगी" in col_raw or col in ("name", "patient", "pt")):
                 cleaned.append(p_token)
-            elif any(k in col for k in ("guardian", "relative", "relative_name", "father", "husband", "spouse", "care_of", "care of", "c/o", "s/o", "w/o", "d/o", "pita/pati", "mother")) or col in ("pita", "pati", "mata"):
+            # Guardian / Caregiver / Relative
+            elif (any(k in col for k in ("guardian", "relative", "caregiver", "careof", "father", "husband", "spouse", "mother", "pita", "pati", "mata")) or
+                  "पिता" in col_raw or "पति" in col_raw or "माता" in col_raw):
                 cleaned.append("[RELATIVE_NAME]")
-            elif any(k in col for k in ("phone", "mobile", "contact", "callback", "cell", "telephone", "mob", "ph_no", "contact_no")):
+            # Phone
+            elif any(k in col for k in ("phone", "mobile", "contact", "callback", "cell", "telephone", "mob")) or "मोबाइल" in col_raw:
                 cleaned.append("[PHONE]")
-            elif any(k in col for k in ("aadhaar", "aadhar")):
+            # Aadhaar & Masked UID
+            elif any(k in col for k in ("aadhaar", "aadhar", "maskeduid", "altid")):
                 cleaned.append("[AADHAAR]")
-            elif any(k in col for k in ("uhid", "mrn", "patientid", "pat_id", "reg_no", "ipd", "opd", "ip_no", "op_no", "mr_no", "cr_no", "admission_no")):
+            # ABHA
+            elif any(k in col for k in ("abha", "abhano", "abhaid")):
+                cleaned.append("[ABHA_NUMBER]")
+            # PAN
+            elif any(k in col for k in ("pan", "pancard")):
+                cleaned.append("[PAN]")
+            # Insurance
+            elif any(k in col for k in ("inspolicy", "insurance", "policy")):
+                cleaned.append("[INSURANCE_ID]")
+            # MRN / Identifiers
+            elif (any(k in col for k in ("uhid", "mrn", "patientuid", "caseid", "hospitaluid", "patientid", "legacymrn", "mrncode", "regno", "ipd", "opd", "ipno", "opno", "crno", "admissionno")) or
+                  "पंजीकरण" in col_raw or "आईडी" in col_raw):
                 cleaned.append(id_token)
-            elif any(k in col for k in ("city", "village", "gaon", "gram", "post", "po", "post_office", "dak_ghar")):
+            # Village / Town / City
+            elif any(k in col for k in ("villagetown", "village", "city", "town", "gaon", "gram", "post", "po")) or "ग्राम" in col_raw:
                 cleaned.append("[VILLAGE]")
             elif val.strip().lower() in GAZETTEER_VILLAGES:
                 cleaned.append("[VILLAGE]")
-            elif any(k in col for k in ("mohalla", "locality", "tehsil", "taluk", "ward_no", "bed_no")):
+            # Locality / Street / Mohalla
+            elif (any(k in col for k in ("streetlocality", "grammohalla", "locality", "mohalla", "tehsil", "taluk", "ward", "street", "house", "pata", "address", "line", "makan")) or
+                  "मोहल्ला" in col_raw or "पता" in col_raw):
                 cleaned.append("[LOCALITY]")
-            elif any(k in col for k in ("pin", "zip", "pincode", "postalcode", "postal_code")):
+            # PIN
+            elif any(k in col for k in ("pin", "pin6", "pincode", "postalcode", "zip")) or "पिन" in col_raw:
                 cleaned.append("[PIN]")
-            elif any(k in col for k in ("street", "house", "pata", "address", "address_line", "line", "makan")):
-                cleaned.append("[HOUSE]")
-            elif col in ("age", "age_yrs", "age_years", "umar", "aayu", "pat_age"):
-                cleaned.append(generalize_age(val))
-            elif any(k in col for k in ("dob", "birthdate", "birth_date", "birth_dt", "date_of_birth", "yob", "janm_tithi")):
+            # Age / Age_Sex
+            elif any(k in col for k in ("age", "ageyears", "ageyrs", "agesex", "umar", "aayu")) or "उम्र" in col_raw or "आयु" in col_raw:
+                if "/" in val:
+                    age_p, sex_p = val.split("/", 1)
+                    cleaned.append(f"{generalize_age(age_p)}/{sex_p}")
+                else:
+                    cleaned.append(generalize_age(val))
+            # DOB
+            elif any(k in col for k in ("dob", "birthdate", "birthdt", "dateofbirth", "yob", "janmtithi")) or "जन्म" in col_raw:
                 cleaned.append(shift_date_string(val, delta_days) if delta_days else "[DOB]")
-            elif any(k in col for k in ("admission", "discharge", "visit_date", "visit_dt", "date", "timestamp", "doa", "dod", "adm_date", "dis_date")):
+            # Admission / Discharge / Dates
+            elif any(k in col for k in ("admit", "disch", "visit", "date", "timestamp", "doa", "dod")) or "दिनांक" in col_raw or "तिथि" in col_raw:
                 cleaned.append(shift_date_string(val, delta_days) if delta_days else val)
             else:
                 cleaned.append(cls.clean_free_text(val, pid=pid, delta_days=delta_days, known_names=known_names))

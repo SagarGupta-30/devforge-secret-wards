@@ -3,15 +3,15 @@ from __future__ import annotations
 
 import re
 
-# Clinician lines: Dr. <Name> or Dr <Name> with optional credentials
+# Clinician lines: Dr. <Name> or Dr <Name> with optional credentials and Devanagari doctors
 DR_RE = re.compile(
-    r"\bDr\.?\s+[A-Za-z]+(?:\s+[A-Za-z]+){0,3}(?:\s*\([A-Za-z0-9\s,.-]+\))?",
+    r"\b(?:Dr\.?|डॉ\.?)\s*(?:[A-Za-z\u0900-\u097F]\.\s*)*[A-Za-z\u0900-\u097F]+(?:\s+[A-Za-z\u0900-\u097F]+){0,4}(?:\s*\([A-Za-z0-9\s,.-]+\))?",
     re.UNICODE
 )
 
 # Complaints / symptoms: C/O <lowercase symptoms/durations> or Hindi terms
 CO_SYMPTOM_RE = re.compile(
-    r"\b[Cc]/[Oo]\s*[:\-]?\s*(?:[a-z\u0900-\u097F]+(?:\s+(?!x\b)[a-z\u0900-\u097F]+){0,5}(?:\s*x\s*\d+\s*(?:days?|d|wks?|weeks?|months?|yrs?|years?))?)",
+    r"\b[Cc]/[Oo]\s*[:\-]?\s*(?:[a-z\u0900-\u097F]+(?:\s+(?:and\s+)?[a-z\u0900-\u097F]+){0,5}(?:\s*x\s*\d+\s*(?:days?|d|wks?|weeks?|months?|yrs?|years?))?)",
     re.UNICODE
 )
 
@@ -21,11 +21,13 @@ KCO_RE = re.compile(
     re.UNICODE
 )
 
-# Medical eponyms
+# Medical eponyms & clinical conditions
 EPONYM_RE = re.compile(
-    r"\b(?:Addison|Parkinson|Alzheimer|Hodgkin|Cushing|Bell|Graves|Crohn|Hashimoto|Kawasaki|Meniere|Wilson|Raynaud|Barrett|Huntington)(?:'s|s)?(?:\s+(?:disease|syndrome|palsy|chorea|thyroiditis))?\b",
+    r"\b(?:Addison|Parkinson|Alzheimer|Hodgkin|Cushing|Bell|Graves|Crohn|Hashimoto|Kawasaki|Meniere|Wilson|Raynaud|Barrett|Huntington|Koch|Ringer|Foley|Creutzfeldt-Jakob)(?:'s|s)?(?:\s+(?:disease|syndrome|palsy|chorea|thyroiditis|lymphoma|abdomen|lactate|catheter))?\b",
     re.IGNORECASE | re.UNICODE
 )
+
+ICD_RE = re.compile(r"\bICD-10(?:\s*[:\-]?\s*[A-Z]\d{2}(?:\.\d+)?)?\b", re.IGNORECASE)
 
 # Common Indian & global drug names, strengths, formulations
 DRUG_RE = re.compile(
@@ -58,7 +60,17 @@ VITALS_RE = re.compile(
     r"\b(?:BP\s*[:\-]?\s*\d{2,3}/\d{2,3}|pulse\s*[:\-]?\s*\d{2,3}|SpO2\s*[:\-]?\s*\d{2,3}%?|HR\s*[:\-]?\s*\d{2,3}|Temp(?:erature)?\s*[:\-]?\s*\d{2,3}(?:\.\d+)?(?:\s*F|\s*C)?|RBS\s*[:\-]?\s*\d{2,3}(?:\s*mg/dL)?|FBS\s*[:\-]?\s*\d{2,3}(?:\s*mg/dL)?|HbA1c\s*[:\-]?\s*\d+(?:\.\d+)?%?)\b",
     re.IGNORECASE | re.UNICODE
 )
-UNITS_RE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:mg/dL|g/dL|mmol/L|mEq/L|uL|mcL|/cumm|IU/L)\b", re.UNICODE)
+UNITS_RE = re.compile(
+    r"\b(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*(?:mg/dL|g/dL|mmol/L|mEq/L|uL|mcL|/uL|/mcL|/cumm|IU/L|IU)\b",
+    re.UNICODE
+)
+LAB_MEASUREMENTS_RE = re.compile(
+    r"\b(?:WBC\s*(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:\s*(?:/uL|/mcL|uL|mcL|/cumm))?|"
+    r"Creatinine\s*\d+(?:\.\d+)?\s*mg/dL|"
+    r"Hb\s*\d+(?:\.\d+)?\s*g/dL|"
+    r"HbA1c\s*\d+(?:\.\d+)?%?)\b",
+    re.IGNORECASE | re.UNICODE
+)
 WARDS_RE = re.compile(r"\b(?:Ward\s*\d+\s*\([A-Za-z]+\)|(?:Bed\s*\d+|ICU|CCU|NICU|PICU|OPD|IPD)(?![-_/0-9])\b)", re.UNICODE)
 ADV_RE = re.compile(r"\bAdv\s*[:\-]\s*[^\n]+", re.UNICODE)
 
@@ -71,12 +83,14 @@ class ClinicalShield:
         CO_SYMPTOM_RE,
         KCO_RE,
         EPONYM_RE,
+        ICD_RE,
         DRUG_RE,
         DRUG_SUFFIX_RE,
         FORMULATION_RE,
         DOSES_RE,
         DURATION_HINDI_RE,
         VITALS_RE,
+        LAB_MEASUREMENTS_RE,
         UNITS_RE,
         WARDS_RE,
         ADV_RE,

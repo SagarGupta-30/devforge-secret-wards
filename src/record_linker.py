@@ -13,6 +13,7 @@ from typing import Any
 
 from indic_transliteration import sanscript
 import rapidfuzz
+from src.ingestion import detect_and_decode
 
 MRN_RE = re.compile(
     r"\b(?:SNJ|JJH|ADM|IPD|DHH|IP|UHID|OPD|CR|REG)[-_/]?\d{2,6}[-_/]?\d{2,8}\b|"
@@ -20,8 +21,25 @@ MRN_RE = re.compile(
     r"\b(?:UHID|MRN|IPD|REG\s*NO|CR\s*NO|OPD\s*NO|IP\s*NO|PATIENT\s*ID)[-:\s]*\d+[A-Z0-9-]*\b",
     re.IGNORECASE
 )
-PHONE_RE = re.compile(r"(?<!\d)[6-9]\d{9}(?!\d)")
+PHONE_RE = re.compile(r"(?<!\d)(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}(?!\d)|(?<!\d)0[6-9]\d{4}[\s-]?\d{5}(?!\d)|(?<!\d)[6-9]\d{9}(?!\d)")
 AADHAAR_RE = re.compile(r"(?<!\d)\d{12}(?!\d)")
+
+
+def extract_phone(s: str) -> str | None:
+    """Extract standard 10-digit Indian mobile number stripping country codes and delimiters."""
+    if not s:
+        return None
+    digits = re.sub(r"[^\d]", "", str(s))
+    if len(digits) == 12 and digits.startswith("91") and digits[2] in "6789":
+        return digits[2:]
+    if len(digits) == 11 and digits.startswith("0") and digits[1] in "6789":
+        return digits[1:]
+    if len(digits) == 10 and digits[0] in "6789":
+        return digits
+    m = re.search(r"[6-9]\d{9}", digits)
+    if m:
+        return m.group(0)
+    return None
 
 
 def norm_id(val: str) -> str:
@@ -29,6 +47,9 @@ def norm_id(val: str) -> str:
     if not val:
         return ""
     return re.sub(r"[-_/\s]", "", str(val)).lower()
+
+
+DEVA_DIGITS_TO_ASCII = str.maketrans("०१२३४५६७८९", "0123456789")
 
 
 def clean_itrans(s: str) -> str:
@@ -39,13 +60,13 @@ def clean_itrans(s: str) -> str:
     if any("\u0900" <= ch <= "\u097F" for ch in s):
         s = sanscript.transliterate(s, sanscript.DEVANAGARI, sanscript.ITRANS).lower()
 
-    s = s.lower().replace("ph", "f").replace("sh", "s").replace("ee", "i").replace("oo", "u").replace(".", " ")
+    s = s.lower().replace("ph", "f").replace("sh", "s").replace("ee", "i").replace("oo", "u").replace("q", "k").replace("ck", "k").replace(".", " ")
     tokens = s.split()
     res = []
     for t in tokens:
         if t in ("md", "mohd", "mohammed", "muhammad"):
             res.append("mohammad")
-        elif t in ("sahab", "saheb", "ji", "bhai", "babu", "didi", "smt", "shri", "kumari", "pt", "mr", "mrs", "ms"):
+        elif t in ("so", "wo", "do", "co", "s/o", "w/o", "d/o", "c/o", "sahab", "saheb", "ji", "bhai", "babu", "didi", "smt", "shri", "kumari", "pt", "mr", "mrs", "ms"):
             continue
         else:
             if t.endswith("a") and len(t) > 2:
@@ -81,22 +102,10 @@ class RecordLinker:
             ext = p.suffix.lower()
             raw = p.read_bytes()
 
-            txt: str | None = None
-            if raw.startswith(b"\xef\xbb\xbf"):
-                try: txt = raw[3:].decode("utf-8", "ignore")
-                except Exception: pass
-            elif raw.startswith((b"\xff\xfe", b"\xfe\xff")):
-                try: txt = raw.decode("utf-16", "ignore")
-                except Exception: pass
-            else:
-                for enc in ("utf-8", "cp1252"):
-                    try:
-                        txt = raw.decode(enc)
-                        break
-                    except Exception:
-                        pass
+            txt, _ = detect_and_decode(raw, ext=ext)
             if not txt:
                 continue
+            txt = txt.translate(DEVA_DIGITS_TO_ASCII)
 
             # 1. Tabular CSV/TSV
             if ext in (".csv", ".tsv"):
@@ -105,7 +114,8 @@ class RecordLinker:
                     reader = list(csv.reader(txt.splitlines(), delimiter=delim))
                     if not reader:
                         continue
-                    header = [h.strip().lower() for h in reader[0]]
+                    header = [re.sub(r"[-_\s]", "", h.strip().lower()) for h in reader[0]]
+                    raw_header = [h.strip() for h in reader[0]]
                     for i, row in enumerate(reader[1:]):
                         cand = PatientCandidate()
                         name_parts = []
@@ -113,25 +123,29 @@ class RecordLinker:
                             if j >= len(header):
                                 continue
                             h = header[j]
+                            h_raw = raw_header[j]
                             c = cell.strip()
                             if not c:
                                 continue
                             if h in ("firstname", "lastname"):
                                 name_parts.append(c)
-                            elif any(k in h for k in ("name", "naam")) and not any(k in h for k in ("relative", "guardian", "father", "husband", "pita")):
+                            elif (any(k in h for k in ("patientname", "beneficiaryname", "fullname", "patientfullname", "patname", "naam")) or
+                                  "मरीज" in h_raw or "रोगी" in h_raw or h in ("name", "patient", "pt")):
                                 cand.raw_names.add(c)
                                 cand.names.add(clean_itrans(c))
-                            elif any(k in h for k in ("uhid", "mrn", "patientid", "reg no")):
+                            elif (any(k in h for k in ("uhid", "mrn", "patientuid", "caseid", "hospitaluid", "patientid", "legacymrn", "mrncode", "regno", "ipd", "opd", "ipno", "opno", "crno", "admissionno", "altid")) or
+                                  "पंजीकरण" in h_raw or "आईडी" in h_raw):
                                 cand.mrns.add(norm_id(c))
-                            elif any(k in h for k in ("phone", "mobile", "contact")):
-                                m = PHONE_RE.search(c.replace(" ", "").replace("-", ""))
-                                if m: cand.phones.add(m.group(0))
-                            elif any(k in h for k in ("aadhaar", "aadhar")):
+                            elif any(k in h for k in ("phone", "mobile", "contact", "callback", "cell", "mob")) or "मोबाइल" in h_raw:
+                                ph = extract_phone(c)
+                                if ph: cand.phones.add(ph)
+                            elif any(k in h for k in ("aadhaar", "aadhar", "maskeduid")):
                                 m = AADHAAR_RE.search(c.replace(" ", "").replace("-", ""))
                                 if m: cand.aadhaars.add(m.group(0))
-                            elif any(k in h for k in ("guardian", "relative", "pita")):
+                            elif (any(k in h for k in ("guardian", "relative", "caregiver", "careof", "father", "husband", "spouse", "mother", "pita", "pati", "mata")) or
+                                  "पिता" in h_raw or "पति" in h_raw or "माता" in h_raw):
                                 cand.relatives.add(clean_itrans(c))
-                            elif any(k in h for k in ("village", "gaon", "gram", "city")):
+                            elif any(k in h for k in ("villagetown", "village", "city", "town", "gaon", "gram", "post", "po")) or "ग्राम" in h_raw:
                                 cand.villages.add(clean_itrans(c))
                             elif h in ("gender", "sex", "ling"):
                                 cand.gender = c[0].upper() if c else ""
@@ -168,8 +182,8 @@ class RecordLinker:
                                 
                             p_phone = pat.get("contact", {}).get("phone") or pat.get("contact", {}).get("mobile") or pat.get("phone") or pat.get("mobile")
                             if p_phone:
-                                m = PHONE_RE.search(str(p_phone))
-                                if m: cand.phones.add(m.group(0))
+                                ph = extract_phone(str(p_phone))
+                                if ph: cand.phones.add(ph)
                             aadh = pat.get("ids", {}).get("aadhar_no") or pat.get("ids", {}).get("aadhaar") or pat.get("aadhaar") or pat.get("aadhar")
                             if aadh: cand.aadhaars.add(str(aadh))
                             g_name = pat.get("guardian", {}).get("name") or pat.get("relative_name") or pat.get("father_name")
@@ -189,8 +203,8 @@ class RecordLinker:
                                     cand.raw_names.add(pinfo["name"])
                                     cand.names.add(clean_itrans(pinfo["name"]))
                                 if pinfo.get("mobile") or pinfo.get("phone"):
-                                    m = PHONE_RE.search(str(pinfo.get("mobile") or pinfo.get("phone")))
-                                    if m: cand.phones.add(m.group(0))
+                                    ph = extract_phone(str(pinfo.get("mobile") or pinfo.get("phone")))
+                                    if ph: cand.phones.add(ph)
                             candidates[(rel, f"/visits/{i}")] = cand
 
                     elif isinstance(data, dict) and "results" in data and isinstance(data["results"], list) and any("uhid" in r or "patient_name" in r or "patient" in r for r in data["results"][:3]):
@@ -212,8 +226,8 @@ class RecordLinker:
                             cand.raw_names.add(pinfo["name"])
                             cand.names.add(clean_itrans(pinfo["name"]))
                         if pinfo.get("phone") or pinfo.get("mobile"):
-                            m = PHONE_RE.search(str(pinfo.get("phone") or pinfo.get("mobile")))
-                            if m: cand.phones.add(m.group(0))
+                            ph = extract_phone(str(pinfo.get("phone") or pinfo.get("mobile")))
+                            if ph: cand.phones.add(ph)
                         candidates[(rel, "doc")] = cand
 
                     elif isinstance(data, dict) and (data.get("resourceType") == "Bundle" or "entry" in data):
@@ -227,13 +241,32 @@ class RecordLinker:
                                         cand.raw_names.add(n["text"])
                                         cand.names.add(clean_itrans(n["text"]))
                                 for tel in res.get("telecom", []):
-                                    m = PHONE_RE.search(str(tel.get("value", "")))
-                                    if m: cand.phones.add(m.group(0))
+                                    ph = extract_phone(str(tel.get("value", "")))
+                                    if ph: cand.phones.add(ph)
                                 for addr in res.get("address", []):
                                     if addr.get("city"): cand.villages.add(clean_itrans(addr["city"]))
                                 for cont in res.get("contact", []):
                                     if cont.get("name", {}).get("text"): cand.relatives.add(clean_itrans(cont["name"]["text"]))
                                 candidates[(rel, "doc")] = cand
+                    else:
+                        cand = PatientCandidate()
+                        # Extract from filename
+                        fn_stem = Path(rel).stem
+                        ph_fn = extract_phone(fn_stem)
+                        if ph_fn: cand.phones.add(ph_fn)
+                        for m in MRN_RE.finditer(fn_stem): cand.mrns.add(norm_id(m.group(0)))
+                        m_fn = re.search(r"([A-Z][a-z]+_[A-Z][a-z]+)", fn_stem)
+                        if m_fn:
+                            raw_n = m_fn.group(1).replace("_", " ")
+                            cand.raw_names.add(raw_n)
+                            cand.names.add(clean_itrans(raw_n))
+                        # Extract from JSON content
+                        for m in PHONE_RE.finditer(txt):
+                            ph = extract_phone(m.group(0))
+                            if ph: cand.phones.add(ph)
+                        for m in MRN_RE.finditer(txt): cand.mrns.add(norm_id(m.group(0)))
+                        if cand.names or cand.mrns or cand.phones:
+                            candidates[(rel, "doc")] = cand
                 except Exception:
                     pass
 
@@ -241,11 +274,17 @@ class RecordLinker:
             elif ext == ".txt":
                 cand = PatientCandidate()
                 for m in MRN_RE.finditer(txt): cand.mrns.add(norm_id(m.group(0)))
-                for m in PHONE_RE.finditer(txt): cand.phones.add(m.group(0))
+                for m in PHONE_RE.finditer(txt):
+                    ph = extract_phone(m.group(0))
+                    if ph: cand.phones.add(ph)
                 for line in txt.splitlines():
                     line_s = line.strip()
-                    if any(line_s.startswith(pfx) for pfx in ("Name:", "Patient Name:", "Patient:", "Pt.", "नाम:", "मरीज़ का नाम:", "मरीज़ का नाम :")):
-                        val = line_s.split(":", 1)[1].split(";")[0].split(",")[0].strip()
+                    if any(line_s.startswith(pfx) for pfx in (
+                        "Name:", "Patient Name:", "Patient:", "Pt.", "नाम:",
+                        "मरीज़ का नाम:", "मरीज़ का नाम :", "मरीज का नाम:", "मरीज का नाम :",
+                        "रोगी का नाम:", "रोगी का नाम :", "रोगी:"
+                    )):
+                        val = line_s.split(":", 1)[1].split(";")[0].split(",")[0].split("|")[0].strip()
                         val = re.split(r"\bAge|\bआयु|\bReg|\bUHID", val)[0].strip()
                         if val:
                             cand.raw_names.add(val)
@@ -255,6 +294,11 @@ class RecordLinker:
                         if val: cand.villages.add(clean_itrans(val))
                     rel_m = re.search(r"(?:S/o|D/o|W/o|C/o|पिता/पति|पिता|पति)\s*(?:का\s*नाम)?\s*[:\-]?\s*([A-Za-z\u0900-\u097F]+(?:\s+[A-Za-z\u0900-\u097F]+)?)", line_s)
                     if rel_m: cand.relatives.add(clean_itrans(rel_m.group(1)))
+                    hon_m = re.search(r"\b([A-Za-z\u0900-\u097F]+(?:\s+[A-Za-z\u0900-\u097F]+)?)\s+(?:sahab|saheb|ji|didi)\b", line_s)
+                    if hon_m and not any(pfx in line_s for pfx in ("Dr.", "Doctor", "डॉ.")):
+                        h_name = hon_m.group(1).strip()
+                        cand.raw_names.add(h_name)
+                        cand.names.add(clean_itrans(h_name))
                 if "Discharge_Summary" in rel:
                     m = re.search(r"Discharge_Summary_([A-Za-z]+_[A-Za-z]+)", rel)
                     if m:
