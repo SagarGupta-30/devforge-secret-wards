@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -33,7 +34,15 @@ def load_policy(path: Path) -> dict:
 
 HERE = Path(__file__).resolve().parent
 POLICY = load_policy(HERE / "config" / "policy.yaml")
-SECRET = os.environ.get("RAKSHA_SECRET", "").encode()  # never print or write this
+DATE_SHIFT_MAX_DAYS = int(POLICY.get("date_shift_max_days", 180))
+AGE_BAND_YEARS = int(POLICY.get("age_band_years", 5))
+
+raw_secret = os.environ.get("RAKSHA_SECRET", "")
+if not raw_secret:
+    sys.stderr.write("WARNING: RAKSHA_SECRET environment variable is unset or empty; falling back to ephemeral random key\n")
+    SECRET = os.urandom(32).hex().encode("utf-8")
+else:
+    SECRET = raw_secret.encode("utf-8")
 
 
 # --------------------------------------------------------------------------- stats
@@ -43,6 +52,13 @@ class Stats:
     linked = 0
     generalized = 0
     suppressed = 0
+
+
+def update_token_stats(cleaned_text: str) -> None:
+    """Updates report statistics based on detected, suppressed, and generalized tokens."""
+    Stats.identifiers += len(re.findall(r"\[(?:PATIENT_NAME|RELATIVE_NAME|PHONE|AADHAAR|AADHAAR_MASKED|ABHA_NUMBER|ABHA_ADDRESS|PAN|INSURANCE_ID|MRN|EMAIL|PSN-[A-F0-9]+)\]", cleaned_text))
+    Stats.suppressed += len(re.findall(r"\[(?:VILLAGE|LOCALITY|PIN|HOUSE|LANDMARK|ADDRESS)\]", cleaned_text))
+    Stats.generalized += len(re.findall(r"\b\d{1,2}-\d{1,2}\b|\b90\+\b", cleaned_text))
 
 
 # --------------------------------------------------------------------------- format processors
@@ -70,7 +86,7 @@ def process_csv(
         loc = f"row:{i}"
         pid = pseudonym_map.get((rel, loc))
         known_names = record_names_map.get((rel, loc))
-        delta_days = compute_date_shift_days(pid or f"{rel}_{loc}", secret)
+        delta_days = compute_date_shift_days(pid or f"{rel}_{loc}", secret, max_days=DATE_SHIFT_MAX_DAYS)
 
         cleaned_row = PIIExtractor.clean_csv_row(row, header, pid=pid, delta_days=delta_days, known_names=known_names)
         w.writerow(cleaned_row)
@@ -79,7 +95,9 @@ def process_csv(
         if pid:
             Stats.linked += 1
 
-    return buf.getvalue()
+    res = buf.getvalue()
+    update_token_stats(res)
+    return res
 
 
 def process_json(
@@ -102,14 +120,16 @@ def process_json(
             records.append({"file": f"sanitized/{out_rel}", "loc": loc, "patient": pid})
             Stats.records += 1
             if pid: Stats.linked += 1
-            delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret)
+            delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret, max_days=DATE_SHIFT_MAX_DAYS)
             cleaned_pat = PIIExtractor.clean_json_value(
                 pat, parent_key="patients", secret=secret, pid=pid, delta_days=delta, known_names=record_names_map.get((rel, loc))
             )
             cleaned_patients.append(cleaned_pat)
         cleaned_data = PIIExtractor.clean_json_value(data, secret=secret)
         cleaned_data["patients"] = cleaned_patients
-        return json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        res = json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        update_token_stats(res)
+        return res
 
     # 2. Visits array (e.g. OPD registers)
     elif isinstance(data, dict) and "visits" in data and isinstance(data["visits"], list):
@@ -120,14 +140,16 @@ def process_json(
             records.append({"file": f"sanitized/{out_rel}", "loc": loc, "patient": pid})
             Stats.records += 1
             if pid: Stats.linked += 1
-            delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret)
+            delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret, max_days=DATE_SHIFT_MAX_DAYS)
             cleaned_v = PIIExtractor.clean_json_value(
                 v, parent_key="visits", secret=secret, pid=pid, delta_days=delta, known_names=record_names_map.get((rel, loc))
             )
             cleaned_visits.append(cleaned_v)
         cleaned_data = PIIExtractor.clean_json_value(data, secret=secret)
         cleaned_data["visits"] = cleaned_visits
-        return json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        res = json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        update_token_stats(res)
+        return res
 
     # 3. Lab bulk results array
     elif isinstance(data, dict) and "results" in data and isinstance(data["results"], list) and any("uhid" in r or "patient_name" in r or "patient" in r for r in data["results"][:3]):
@@ -138,14 +160,16 @@ def process_json(
             records.append({"file": f"sanitized/{out_rel}", "loc": loc, "patient": pid})
             Stats.records += 1
             if pid: Stats.linked += 1
-            delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret)
+            delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret, max_days=DATE_SHIFT_MAX_DAYS)
             cleaned_r = PIIExtractor.clean_json_value(
                 r, parent_key="results", secret=secret, pid=pid, delta_days=delta, known_names=record_names_map.get((rel, loc))
             )
             cleaned_results.append(cleaned_r)
         cleaned_data = PIIExtractor.clean_json_value(data, secret=secret)
         cleaned_data["results"] = cleaned_results
-        return json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        res = json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        update_token_stats(res)
+        return res
 
     # 4. Standard document JSON (FHIR bundles, single lab reports, opd summaries)
     else:
@@ -154,11 +178,13 @@ def process_json(
         records.append({"file": f"sanitized/{out_rel}", "loc": loc, "patient": pid})
         Stats.records += 1
         if pid: Stats.linked += 1
-        delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret)
+        delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret, max_days=DATE_SHIFT_MAX_DAYS)
         cleaned_data = PIIExtractor.clean_json_value(
             data, secret=secret, pid=pid, delta_days=delta, known_names=record_names_map.get((rel, loc))
         )
-        return json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        res = json.dumps(cleaned_data, ensure_ascii=False, indent=2) + "\n"
+        update_token_stats(res)
+        return res
 
 
 def process_text(
@@ -176,9 +202,11 @@ def process_text(
     Stats.records += 1
     if pid:
         Stats.linked += 1
-    delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret)
+    delta = compute_date_shift_days(pid or f"{rel}_{loc}", secret, max_days=DATE_SHIFT_MAX_DAYS)
     known_names = record_names_map.get((rel, loc))
-    return PIIExtractor.clean_free_text(text, pid=pid, delta_days=delta, known_names=known_names)
+    res = PIIExtractor.clean_free_text(text, pid=pid, delta_days=delta, known_names=known_names)
+    update_token_stats(res)
+    return res
 
 
 def peak_rss_mb() -> float:
@@ -198,6 +226,10 @@ def main() -> int:
     a = ap.parse_args()
     t0 = time.monotonic()
     inp, out = Path(a.input), Path(a.output)
+    if not inp.exists() or not inp.is_dir():
+        sys.stderr.write(f"Error: input directory does not exist or is not a directory: {inp}\n")
+        return 1
+
     san = out / "sanitized"
     san.mkdir(parents=True, exist_ok=True)
     files, records = [], []

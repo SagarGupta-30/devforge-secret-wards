@@ -100,12 +100,20 @@ LATIN_SURNAMES = (
     r"Chaudhary|Rastogi|Agnihotri|Saxena|Awasthi|Devi|Lal|Nath|Das|Dixit|Rai|"
     r"Rawat|Kashyap|Agarwal|Jain|Bhat|Bhatt|Pillai|Hegde|Shetty|Narayanan"
 )
+LATIN_SURNAMES_SET = {s.lower() for s in LATIN_SURNAMES.split("|")}
 LATIN_SURNAME_NAME = re.compile(
     rf"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){{0,2}})\s+(?:{LATIN_SURNAMES})\b"
 )
 
+# Stop words that terminate person name spans
+NAME_STOP_WORDS = (
+    r"Age|आयु|उम्र|UHID|MRN|Sex|Gender|लिंग|stable|admitted|C/O|c/o|K/C/O|k/c/o|H/O|h/o|"
+    r"S/o|s/o|D/o|d/o|W/o|w/o|DOB|जन्म|Mob|Mobile|मोबाइल|Phone|Address|पता|Vill|Village|ग्राम|Tehsil|तहसील|Distt?|जिला|State|राज्य"
+)
+NAME_STOP_LOOKAHEAD = rf"(?!\b(?:{NAME_STOP_WORDS})\b)"
+
 # Word and Multi-word Spans (Latin and Devanagari with optional _\d+ suffixes)
-NAME_WORD = r"(?:[A-Za-z]+|[\u0900-\u097F]+)(?:_\d+)?"
+NAME_WORD = rf"(?:{NAME_STOP_LOOKAHEAD}(?:[A-Za-z]+|[\u0900-\u097F]+)(?:_\d+)?)"
 NAME_SPAN = rf"{NAME_WORD}(?:[^\S\r\n]+{NAME_WORD}){{0,3}}"
 
 # Relatives and Guardians
@@ -160,7 +168,8 @@ DEVA_HOUSE_LABEL = re.compile(r"मकान\s*(?:नं\.?)?\s*[-:\s]*\w+", re.
 DEVA_WARD_LABEL = re.compile(r"वार्ड\s*(?:नं\.?)?\s*\d+\b", re.UNICODE)
 
 DEVA_IN_SENTENCE_NAME = re.compile(r"(?<![A-Za-z0-9\u0900-\u097F])([\u0900-\u097F]+(?:\s+[\u0900-\u097F]+){0,2})\s+को\s+", re.UNICODE)
-DEVA_HONORIFIC_NAME = re.compile(r"([^\n,;|/\s]+(?:\s+[^\n,;|/\s]+)?)\s+(?:जी|साहब|साहिब)", re.UNICODE)
+DEVA_HONORIFICS = r"जी|साहब|साहिब|दीदी|भैया|बाबू|बाबूजी|अम्मा"
+DEVA_HONORIFIC_NAME = re.compile(rf"([^\n,;|/\s]+(?:\s+[^\n,;|/\s]+)?)\s+(?:{DEVA_HONORIFICS})", re.UNICODE)
 DEVA_SURNAME_NAME = re.compile(
     rf"(?<![A-Za-z0-9\u0900-\u097F])([\u0900-\u097F]+(?:_\d+)?(?:\s+[\u0900-\u097F]+(?:_\d+)?){{0,2}})\s+"
     rf"(?:{DEVA_SURNAMES})(?:_\d+)?(?![A-Za-z0-9\u0900-\u097F])",
@@ -188,7 +197,8 @@ GAZETTEER_VILLAGES = {
 }
 
 ADDRESS_VILLAGE_RE = re.compile(
-    r"\b(?:Vill(?:age)?\b|Vill\.|Gram\b|Gaon\b|Post(?:\s*Office)?\b|P\.?O\.?|Tehsil\b|Kasba\b|Town\b|City\b)\s*[:\-]?\s*([A-Za-z\s]+?)(?=(?:,|\.|\n|;|-|\bVill\b|\bGram\b|\bPost\b|\bTehsil\b|\bDistt?\b|\bWard\b|\bMohalla\b|\bPincode\b|\bPin\b|\d|$))",
+    r"\b(?:Vill(?:age)?\b|Vill\.|Gram\b|Gaon\b|Post(?:\s*Office)?\b|P\.?O\.?|Tehsil\b|Kasba\b)\s*[:\-]?\s*([A-Za-z\s]+?)(?=(?:,|\.|\n|;|-|\bVill\b|\bGram\b|\bPost\b|\bTehsil\b|\bDistt?\b|\bWard\b|\bMohalla\b|\bPincode\b|\bPin\b|\d|$))|"
+    r"\b(?:Town|City)\s*[:\-]\s*([A-Za-z\s]+?)(?=(?:,|\.|\n|;|-|\bVill\b|\bGram\b|\bPost\b|\bTehsil\b|\bDistt?\b|\bWard\b|\bMohalla\b|\bPincode\b|\bPin\b|\d|$))",
     re.IGNORECASE
 )
 ADDRESS_TEHSIL_RE = re.compile(r"\bTehsil\s+[A-Za-z\s]+?(?=(?:,|\.|\n|;|-|Distt?|Vill|$))", re.IGNORECASE)
@@ -217,8 +227,8 @@ DOB_LABEL_RE = re.compile(
     r"\b(?:DOB|Date\s*of\s*Birth)\s*[:\-]?\s*(\d{1,2}[-/\.]\d{1,2}[-/\.]\d{2,4}|\d{4}[-/\.]\d{1,2}[-/\.]\d{1,2})",
     re.IGNORECASE
 )
-AGE_LABEL_RE = re.compile(r"\bAge(?:/Sex)?\s*[:\-]?\s*(\d{1,3})\s*(?:Yrs?|years?|yr)?", re.IGNORECASE)
-DEVA_AGE_LABEL_RE = re.compile(r"आयु\s*[:\-]?\s*(\d{1,3})\s*वर्ष", re.UNICODE)
+AGE_LABEL_RE = re.compile(r"\b(Age(?:/Sex)?\s*[:\-])\s*(\d{1,3})(\s*(?:Yrs?|years?|yr)?)", re.IGNORECASE)
+DEVA_AGE_LABEL_RE = re.compile(r"(आयु\s*[:\-]?\s*)(\d{1,3})(\s*वर्ष)", re.UNICODE)
 
 
 # --------------------------------------------------------------------------- Extraction Core
@@ -368,8 +378,8 @@ class PIIExtractor:
 
         # 6. Age & DOB generalization
         shielded = DOB_LABEL_RE.sub("DOB: [DOB]", shielded)
-        shielded = AGE_LABEL_RE.sub(lambda m: f"Age: {generalize_age(m.group(1))}", shielded)
-        shielded = DEVA_AGE_LABEL_RE.sub(lambda m: f"आयु: {generalize_age(m.group(1))} वर्ष", shielded)
+        shielded = AGE_LABEL_RE.sub(lambda m: f"{m.group(1)} {generalize_age(m.group(2))}{m.group(3)}", shielded)
+        shielded = DEVA_AGE_LABEL_RE.sub(lambda m: f"{m.group(1)}{generalize_age(m.group(2))}{m.group(3)}", shielded)
 
         # 7. Redact known patient names in text if available (Unicode-safe word boundaries, longest first)
         if known_names:
@@ -494,9 +504,7 @@ class PIIExtractor:
                 if parent_key in ("by_uhid", "by_name") and secret:
                     h = hmac.new(secret, k.encode("utf-8"), hashlib.sha256).hexdigest()[:8]
                     clean_k = f"KEY_{parent_key}_{h}"
-                elif any(term in clean_k.lower() for term in (
-                    "tariq", "siddiqui", "kulkarni", "chaturvedi", "yudhishthir", "qureshi", "sameer", "amit_kumar", "devvrath"
-                )) or NAME_IN_FILENAME_RE.search(clean_k):
+                elif (set(re.split(r"[^a-zA-Z0-9]+", clean_k.lower())) & LATIN_SURNAMES_SET) or NAME_IN_FILENAME_RE.search(clean_k):
                     clean_k = re.sub(r"[A-Za-z]+_[A-Za-z]+(?:_[A-Za-z]+)?", "[PATIENT_NAME]", clean_k)
                 if PHONE_RE.search(clean_k):
                     clean_k = PHONE_RE.sub("[PHONE]", clean_k)
@@ -563,9 +571,16 @@ class PIIExtractor:
                     new_dict[clean_k] = "[RELATIVE_NAME]"
                 # Patient names
                 elif (any(k in clean_k.lower() for k in ("patient", "pat_name", "pt_name", "firstname", "first_name", "lastname", "last_name", "naam", "full_name", "zwsp", "homoglyph")) or
-                      (clean_k.lower() in ("name", "pt") and not is_clinical_org_or_practitioner and not isinstance(v, dict))):
+                      (clean_k.lower() in ("name", "pt") and not is_clinical_org_or_practitioner)):
                     if isinstance(v, dict):
-                        new_dict[clean_k] = {sub_k: p_token for sub_k in v}
+                        new_dict[clean_k] = {
+                            sub_k: (
+                                [p_token for _ in sub_v] if isinstance(sub_v, list)
+                                else {sub_sub_k: p_token for sub_sub_k in sub_v} if isinstance(sub_v, dict)
+                                else p_token
+                            )
+                            for sub_k, sub_v in v.items()
+                        }
                     elif isinstance(v, list):
                         new_dict[clean_k] = [p_token for _ in v]
                     else:
@@ -634,10 +649,9 @@ class PIIExtractor:
         clean = []
         for i, col in enumerate(header):
             c = col.strip()
-            # If header embeds phone, MRN, or patient name e.g. "Sameer_Kulkarni_9811177001_Visit_Note"
-            if PHONE_RE.search(c) or MRN_RE.search(c) or NAME_IN_FILENAME_RE.search(c) or any(
-                term in c.lower() for term in ("kulkarni", "siddiqui", "chaturvedi", "qureshi", "sameer")
-            ):
+            # If header embeds phone, MRN, or patient surname/name
+            tokens = set(re.split(r"[^a-zA-Z0-9]+", c.lower()))
+            if PHONE_RE.search(c) or MRN_RE.search(c) or NAME_IN_FILENAME_RE.search(c) or (tokens & LATIN_SURNAMES_SET):
                 clean.append(f"col_{i}")
             else:
                 clean.append(c)
@@ -652,76 +666,132 @@ class PIIExtractor:
         delta_days: int = 0,
         known_names: set[str] | None = None,
     ) -> list[str]:
-        """Sanitizes CSV row matching column semantic headers."""
+        """Sanitizes CSV row matching column semantic headers with normalized token-boundary routing."""
         cleaned = []
         p_token = f"[{pid}]" if pid else "[PATIENT_NAME]"
         id_token = f"[{pid}]" if pid else "[MRN]"
 
         for i, val in enumerate(row):
             col_raw = header[i] if i < len(header) else ""
-            col = re.sub(r"[-_\s]", "", col_raw.lower())
+            col_lower = col_raw.lower().strip()
+            tokens = [t for t in re.split(r"[^a-z0-9\u0900-\u097F]+", col_lower) if t]
+            token_set = set(tokens)
+            col_compact = "".join(tokens)
 
-            # Preserve medical results, lab values, and billing amounts
-            if any(k in col for k in ("result", "value", "unit", "range", "min", "max", "loinc", "test", "panel", "amount", "charge", "cost", "total", "claim", "approved", "time")):
+            # 1. Date Columns ROUTED FIRST (ensures admit & discharge dates shifted identically for LOS preservation)
+            # DOB / Birth date
+            if token_set & {"dob", "birthdate", "birthdt", "yob"} or col_compact in ("dob", "birthdate", "birthdt", "dateofbirth", "yob", "janmtithi") or "जन्म" in col_raw:
+                cleaned.append(shift_date_string(val, delta_days) if delta_days else "[DOB]")
+            # Admission, Discharge, Visit, Event Dates
+            elif (
+                token_set & {"date", "dates", "admit", "admission", "disch", "discharge", "visit", "timestamp", "doa", "dod", "collected", "encounter"}
+                or any(t.endswith("date") for t in tokens)
+                or col_compact in ("admitdate", "admissiondate", "dischargedate", "dischdate", "visitdate", "reportdate", "eventdate", "encounterdate", "servicedate", "doa", "dod")
+                or "दिनांक" in col_raw or "तिथि" in col_raw
+            ):
+                cleaned.append(shift_date_string(val, delta_days) if delta_days else val)
+
+            # 2. Patient Names ROUTED BEFORE Clinical Preserve
+            elif (
+                token_set & {"patientname", "beneficiaryname", "fullname", "patientfullname", "patname"}
+                or col_compact in ("patientname", "beneficiaryname", "fullname", "patientfullname", "patname", "firstname", "lastname", "naam")
+                or ("name" in token_set and token_set & {"patient", "pat", "pt", "beneficiary", "client"})
+                or (col_compact == "patienttestname")
+                or ("मरीज" in col_raw or "रोगी" in col_raw)
+                or (col_compact in ("name", "patient", "pt") and not (token_set & {"dr", "doctor", "hospital", "test", "panel", "facility"}))
+            ):
+                cleaned.append(p_token)
+
+            # 3. Clinical & Facility Preserve Branch: medical results, lab values, tests, billing amounts, hospital/ward
+            elif (
+                (token_set & {"result", "results", "value", "values", "unit", "units", "range", "min", "max", "loinc", "test", "tests", "panel", "panels", "amount", "charge", "charges", "cost", "costs", "total", "claim", "claims", "approved", "time", "dosage", "dose", "freq", "frequency", "route", "finding", "findings", "vital", "vitals", "bp", "pulse", "temp", "spo2", "rr", "ward", "department"}
+                or col_compact in ("labresult", "testresult", "claimamount", "totalamount", "approvedamount", "hospital", "facility", "clinic", "hospitalname", "facilityname", "clinicname", "wardname"))
+                and not (token_set & {"uid", "id", "mrn", "uhid", "no", "code", "ref"} or col_compact in ("hospitaluid", "patientuid", "caseid"))
+            ):
                 cleaned.append(val)
-            # Preserve district as quasi-identifier (with PII guard)
-            elif any(k in col for k in ("district", "distt", "dist", "jila", "zila", "state", "rajya", "pradesh")):
+
+            # 4. District / State (preserved as broad quasi-identifier with PII guard)
+            elif token_set & {"district", "distt", "dist", "jila", "zila", "state", "rajya", "pradesh"}:
                 if PHONE_RE.search(val) or MRN_RE.search(val) or AADHAAR_RE.search(val):
                     cleaned.append("[LOCALITY]")
                 else:
                     cleaned.append(val)
-            # Patient names
-            elif (any(k in col for k in ("patientname", "beneficiaryname", "fullname", "patientfullname", "patname", "firstname", "lastname", "naam")) or
-                  "मरीज" in col_raw or "रोगी" in col_raw or col in ("name", "patient", "pt")):
-                cleaned.append(p_token)
-            # Guardian / Caregiver / Relative
-            elif (any(k in col for k in ("guardian", "relative", "caregiver", "careof", "father", "husband", "spouse", "mother", "pita", "pati", "mata")) or
-                  "पिता" in col_raw or "पति" in col_raw or "माता" in col_raw):
+
+            # 5. Guardian / Caregiver / Relative (Hospital never matches pita!)
+            elif (
+                token_set & {"guardian", "relative", "caregiver", "careof", "father", "husband", "spouse", "mother", "pita", "pati", "mata"}
+                or any(t in col_raw for t in ("पिता", "पति", "माता", "अभिभावक"))
+                or col_compact in ("careofrelative", "guardianinfo", "guardiandetails", "caregiverline", "relativeref", "pitapati")
+            ):
                 cleaned.append("[RELATIVE_NAME]")
-            # Phone
-            elif any(k in col for k in ("phone", "mobile", "contact", "callback", "cell", "telephone", "mob")) or "मोबाइल" in col_raw:
+
+            # 6. Phone / Contact (Mobility never matches mob!)
+            elif (
+                token_set & {"phone", "mobile", "contact", "callback", "cell", "telephone", "mob"}
+                or "मोबाइल" in col_raw
+                or col_compact in ("phoneno", "mobileno", "contactno", "cellno", "phonenumber", "mobilenumber")
+            ):
                 cleaned.append("[PHONE]")
-            # Aadhaar & Masked UID
-            elif any(k in col for k in ("aadhaar", "aadhar", "maskeduid", "altid")):
+
+            # 7. Aadhaar & Masked UID
+            elif (
+                token_set & {"aadhaar", "aadhar", "maskeduid", "altid"}
+                or col_compact in ("aadhaar", "aadhar", "aadhaar12", "maskeduid")
+            ):
                 cleaned.append("[AADHAAR]")
-            # ABHA
-            elif any(k in col for k in ("abha", "abhano", "abhaid")):
+
+            # 8. ABHA
+            elif token_set & {"abha", "abhano", "abhaid"} or col_compact in ("abhano", "abhaid", "abhanumber"):
                 cleaned.append("[ABHA_NUMBER]")
-            # PAN
-            elif any(k in col for k in ("pan", "pancard")):
+
+            # 9. PAN (Company never matches pan!)
+            elif token_set & {"pan", "pancard"} or col_compact in ("pan", "pancard", "panno"):
                 cleaned.append("[PAN]")
-            # Insurance
-            elif any(k in col for k in ("inspolicy", "insurance", "policy")):
+
+            # 10. Insurance
+            elif token_set & {"inspolicy", "insurance", "policy", "tpa"} or col_compact in ("inspolicy", "insuranceno", "policyno"):
                 cleaned.append("[INSURANCE_ID]")
-            # MRN / Identifiers
-            elif (any(k in col for k in ("uhid", "mrn", "patientuid", "caseid", "hospitaluid", "patientid", "legacymrn", "mrncode", "regno", "ipd", "opd", "ipno", "opno", "crno", "admissionno")) or
-                  "पंजीकरण" in col_raw or "आईडी" in col_raw):
+
+            # 11. MRN / Identifiers
+            elif (
+                token_set & {"uhid", "mrn", "patientuid", "caseid", "hospitaluid", "patientid", "legacymrn", "mrncode", "regno", "ipd", "opd", "ipno", "opno", "crno", "admissionno"}
+                or col_compact in ("patientuid", "caseid", "hospitaluid", "legacymrn", "mrncode", "regno", "ipno", "opno", "crno", "admissionno")
+                or any(t in col_raw for t in ("पंजीकरण", "आईडी"))
+            ):
                 cleaned.append(id_token)
-            # Village / Town / City
-            elif any(k in col for k in ("villagetown", "village", "city", "town", "gaon", "gram", "post", "po")) or "ग्राम" in col_raw:
+
+            # 12. Village / Town (Report_date never matches po!)
+            elif (
+                token_set & {"village", "villagetown", "town", "city", "gaon", "gram", "post", "po"}
+                or "ग्राम" in col_raw
+                or col_compact in ("villagetown", "postoffice", "dakghar")
+            ):
                 cleaned.append("[VILLAGE]")
             elif val.strip().lower() in GAZETTEER_VILLAGES:
                 cleaned.append("[VILLAGE]")
-            # Locality / Street / Mohalla
-            elif (any(k in col for k in ("streetlocality", "grammohalla", "locality", "mohalla", "tehsil", "taluk", "ward", "street", "house", "pata", "address", "line", "makan")) or
-                  "मोहल्ला" in col_raw or "पता" in col_raw):
+
+            # 13. Locality / Address / House (Baseline_bp never matches line! Hospital ward never matches ward!)
+            elif (
+                token_set & {"streetlocality", "grammohalla", "locality", "mohalla", "tehsil", "taluk", "street", "house", "pata", "address", "makan"}
+                or any(t in col_raw for t in ("मोहल्ला", "पता", "मकान"))
+                or col_compact in ("streetlocality", "grammohalla", "addressline", "houseno")
+            ):
                 cleaned.append("[LOCALITY]")
-            # PIN
-            elif any(k in col for k in ("pin", "pin6", "pincode", "postalcode", "zip")) or "पिन" in col_raw:
+
+            # 14. PIN (Spinal_level never matches pin!)
+            elif token_set & {"pin", "pin6", "pincode", "postalcode", "zip"} or "पिन" in col_raw or col_compact in ("pincode", "postalcode", "zipcode"):
                 cleaned.append("[PIN]")
-            # Age / Age_Sex
-            elif any(k in col for k in ("age", "ageyears", "ageyrs", "agesex", "umar", "aayu")) or "उम्र" in col_raw or "आयु" in col_raw:
+
+            # 15. Age / Age_Sex
+            elif token_set & {"age", "ageyears", "ageyrs", "agesex", "umar", "aayu"} or any(t in col_raw for t in ("उम्र", "आयु")) or col_compact in ("ageyears", "ageyrs", "agesex"):
                 if "/" in val:
                     age_p, sex_p = val.split("/", 1)
                     cleaned.append(f"{generalize_age(age_p)}/{sex_p}")
                 else:
                     cleaned.append(generalize_age(val))
-            # DOB
-            elif any(k in col for k in ("dob", "birthdate", "birthdt", "dateofbirth", "yob", "janmtithi")) or "जन्म" in col_raw:
-                cleaned.append(shift_date_string(val, delta_days) if delta_days else "[DOB]")
-            # Admission / Discharge / Dates
-            elif any(k in col for k in ("admit", "disch", "visit", "date", "timestamp", "doa", "dod")) or "दिनांक" in col_raw or "तिथि" in col_raw:
-                cleaned.append(shift_date_string(val, delta_days) if delta_days else val)
+
+            # 16. Fallback to free text cleaner
             else:
                 cleaned.append(cls.clean_free_text(val, pid=pid, delta_days=delta_days, known_names=known_names))
+        return cleaned
         return cleaned

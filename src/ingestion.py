@@ -28,7 +28,22 @@ GENERIC_STEMS = {
     "ward_protocol", "edge_roster", "north_master_utf8bom", "hindi_ward_utf16be",
     "south_batch_1", "south_batch_2", "arogya_cp1252_roster", "jeevan_jyoti_utf16",
     "bulk_merged_export", "care_of_vs_complaint", "devanagari_link", "edge_bundle",
-    "ambiguous_homonyms", "tariq_fhir_bundle", "fhir_bundle_sameer"
+    "ambiguous_homonyms"
+}
+
+INDIAN_NAME_TOKENS = {
+    "sharma", "verma", "singh", "kumar", "gupta", "khan", "patel", "yadav",
+    "tiwari", "mishra", "pandey", "shukla", "tripathi", "dubey", "chaubey",
+    "dwivedi", "upadhyay", "siddiqui", "kulkarni", "chaturvedi", "qureshi",
+    "ali", "ahmed", "hussain", "ansari", "fatima", "khatun", "zaidi", "naqvi",
+    "rizvi", "shaikh", "sayed", "malik", "pathan", "deshmukh", "patil",
+    "pawar", "shinde", "jadhav", "joshi", "bhat", "nair", "menon", "pillai",
+    "reddy", "rao", "murthy", "iyer", "iyengar", "mukherjee", "banerjee",
+    "chatterjee", "bose", "das", "dutta", "ghosh", "roy", "sen", "sengupta",
+    "chaudhary", "rastogi", "saxena", "devi", "lal", "dixit", "rai", "rawat",
+    "jain", "agarwal", "bhatt", "tariq", "sameer", "mohammad", "mohd",
+    "amit", "anil", "sunita", "priya", "ramesh", "zara", "yudhishthir",
+    "devvrath", "ananya"
 }
 
 
@@ -182,11 +197,12 @@ def scrub_filename(rel_path: str, secret: bytes) -> str:
             has_pii = True
         elif NAME_IN_FILENAME_RE.search(stem):
             has_pii = True
+        elif set(re.split(r"[^a-zA-Z0-9]+", stem.lower())) & INDIAN_NAME_TOKENS:
+            has_pii = True
         elif any(term in stem.lower() for term in (
             "discharge_summary", "patient", "discharge_note",
             "khandala", "lonavala", "rampur", "biswan", "nawabganj", "malihabad",
-            "mahmudabad", "safipur", "canarypur", "sidhauli", "qazipura",
-            "tariq", "siddiqui", "kulkarni", "chaturvedi", "yudhishthir", "qureshi", "sameer"
+            "mahmudabad", "safipur", "canarypur", "sidhauli", "qazipura"
         )):
             has_pii = True
 

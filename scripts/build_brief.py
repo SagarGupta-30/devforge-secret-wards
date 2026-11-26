@@ -186,8 +186,8 @@ def create_brief(output_path="Project_Brief.pdf"):
             Paragraph("<b>STAGE 3: Pass B PII Scrubbing</b><br/>• 6 Channels: body, keys, headers, base64, meta<br/>• Resolves Meaning Traps (`Dr.` vs patient)<br/>• Redacts Aadhaar, ABHA, MRN, phones, village", table_cell),
         ],
         [
-            Paragraph("<b>STAGE 4: Cross-Script Linker</b><br/>• Devanagari ITRANS transliteration<br/>• Double Metaphone + RapidFuzz token match<br/>• Multi-signal clusterer (1.00 precision guard)", table_cell),
-            Paragraph("<b>STAGE 5: HMAC Privacy Layer</b><br/>• Interval-preserving date shift (\u0394t invariant)<br/>• 5-year age banding + village suppression<br/>• Deterministic `PSN-XXXXXX` pseudonymization", table_cell),
+            Paragraph("<b>STAGE 4: Cross-Script Linker</b><br/>• Devanagari ITRANS transliteration<br/>• Phonetic + RapidFuzz token match<br/>• Multi-signal clusterer (1.00 precision guard)", table_cell),
+            Paragraph("<b>STAGE 5: HMAC Privacy Layer</b><br/>• Interval-preserving date shift (\u0394t invariant)<br/>• 5-year age banding + village suppression<br/>• Deterministic `PSN-XXXXXXXXXX` pseudonymization", table_cell),
             Paragraph("<b>STAGE 6: Output Verification</b><br/>• Strict `raksha-report/1` JSON contract<br/>• Valid UTF-8 `sanitized/` + `records.jsonl`<br/>• Zero plaintext leaks in report or /tmp", table_cell),
         ]
     ]
@@ -275,7 +275,7 @@ def create_brief(output_path="Project_Brief.pdf"):
         "• <b>Transliteration & Phonetic Canonicalization:</b> Patient records in Indian healthcare frequently alternate between Devanagari script "
         "and Latin/English transliterations (e.g., <i>'Mohammad Arif (Devanagari script)'</i> vs. <i>'Mohd Arif'</i>). Raksha executes lossless script normalization using "
         "<code>indic-transliteration</code> (Devanagari \u2192 ITRANS \u2192 lowercase ASCII). Titles and honorifics (<i>'Shri', 'Smt', 'Kumari', 'Md', 'Dr'</i>) "
-        "are systematically parsed. Names are converted to Double Metaphone phonetic codes (via <code>jellyfish</code>) and evaluated using token-sort "
+        "are systematically parsed. Names are canonicalized into normalized phonetic tokens and evaluated using token-sort "
         "fuzzy ratios (<code>rapidfuzz</code>) to bridge orthographic spelling discrepancies across rural clinics.",
         bullet_style
     ))
@@ -293,7 +293,7 @@ def create_brief(output_path="Project_Brief.pdf"):
     story.append(Paragraph(
         "• <b>Mathematical Invariance of Hospital Stay Length:</b> Public electoral rolls contain exact age, relative names, and village addresses. "
         "To neutralize voter-list quasi-identifier attacks while retaining epidemiological utility, Raksha calculates a deterministic integer day shift "
-        "\u0394 \u2208 [-30, +30] keyed by HMAC-SHA256(Patient ID, RAKSHA_SECRET). For admission date T_adm and discharge date T_dis:<br/>"
+        "\u0394 \u2208 [-180, +180] keyed by HMAC-SHA256(Patient ID, RAKSHA_SECRET). For admission date T_adm and discharge date T_dis:<br/>"
         "&nbsp;&nbsp;&nbsp;&nbsp;<b>Stay Duration<sub>sanitized</sub> = (T<sub>dis</sub> + \u0394) - (T<sub>adm</sub> + \u0394) = T<sub>dis</sub> - T<sub>adm</sub> = Stay Duration<sub>raw</sub></b><br/>"
         "Bed utilization, length-of-stay modeling, and treatment intervals remain <b>100% mathematically exact</b>, but real-world calendar correlation fails completely.",
         bullet_style
@@ -301,7 +301,7 @@ def create_brief(output_path="Project_Brief.pdf"):
     story.append(Paragraph(
         "• <b>Granular Address Suppression & 5-Year Age Banding:</b> Micro-locations (village, ward, mohalla, house, street, PIN) are redacted to generic tokens, "
         "while broad district and state entities are safely retained for geographic health surveillance. Exact dates of birth are generalized to standard "
-        "5-year demographic brackets (e.g., 50\u201354), yielding robust <i>k</i>-anonymity (<i>k</i> \u2265 450 per demographic cluster in district cohorts).",
+        "5-year demographic brackets (e.g., 50\u201354), yielding robust <i>k</i>-anonymity across demographic cohorts in district populations.",
         bullet_style
     ))
     story.append(Spacer(1, 1.5))
@@ -378,11 +378,11 @@ def create_brief(output_path="Project_Brief.pdf"):
     story.append(Paragraph(
         "• <b>Security Architecture:</b> All data transformations occur entirely in ephemeral memory. The secret key (<code>RAKSHA_SECRET</code>) "
         "is never written to disk, output reports, or logs. Output filenames are deterministically scrubbed using HMAC-SHA256 salts, preventing "
-        "directory-listing reconnaissance. The system operates fully airgapped with zero internet connectivity (`internet = false`).",
+        "directory-listing reconnaissance. The system operates fully airgapped with zero external network connectivity.",
         bullet_style
     ))
     story.append(Paragraph(
-        "• <b>Unseen Generalization Hardening:</b> Zero hospital names, doctor names, or specific district names are hardcoded. Clinical parsing "
+        "• <b>Unseen Generalization Hardening:</b> Zero real patient records or environment secrets hardcoded. Clinical parsing "
         "relies on structural schemas, universal morphological suffixes, and lexical patterns. In testing with shuffled columns, altered date formats, "
         "and unseen patient names, 100% of PII was redacted with zero loss of medical fidelity.",
         bullet_style

@@ -1,13 +1,6 @@
 pandas
-pydantic
-regex
-phonenumbers
-dateparser
-indic-transliteration
-jellyfish
-rapidfuzz
-recordlinkage
-cryptography
-charset-normalizer
-psutil
 streamlit
+charset-normalizer
+indic-transliteration
+rapidfuzz
+pyyaml

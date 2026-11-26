@@ -66,15 +66,16 @@ Output Release ──► sanitized/ + records.jsonl + report.json
 ### 4. Cross-Script Record Linker (`src/record_linker.py`)
 - **Profile Extraction**: Extracts candidate profiles from CSV/TSV, JSON (OPD, DHH, Lab, FHIR), and text notes.
 - **Cross-Script Normalization**: Transliterates Devanagari names using `indic-transliteration` ITRANS canonicalized into normalized phonetics (e.g. `"मोहम्मद आरिफ"` -> `"mohammad arif"`).
-- **Phonetic Canonicalization**: Expands common prefixes (`md`, `mohd`, `mohammed` -> `mohammad`), strips honorifics and titles (`smt`, `shri`, `kumari`, `pt`, `mr`, `mrs`), and applies Double Metaphone keys (`jellyfish`).
+- **Phonetic Canonicalization**: Expands common prefixes (`md`, `mohd`, `mohammed` -> `mohammad`), strips honorifics and titles (`smt`, `shri`, `kumari`, `pt`, `mr`, `mrs`), and evaluates phonetic similarity with `indic-transliteration` and `rapidfuzz` token matching paired with demographic compatibility.
 - **Multi-Signal Clustering**:
-  - Deterministic union-find on hard identifiers (`MRN/UHID`, `Phone`, `Aadhaar`).
+  - Deterministic union-find on hard identifiers (`MRN/UHID`, `Aadhaar`).
+  - Phone matching required to pair with compatible names, relatives, or villages (never merging distinct family members sharing a phone).
   - Secondary confirmation via token sort ratio (`>= 85`) corroborated with matching relative names or villages.
   - Strict anti-over-merge guardrails: ambiguous or isolated mentions are assigned `"patient": null` to preserve **1.00 linking precision**.
-- **Keyed Pseudonyms**: Mints 6-character HMAC pseudonyms (`PSN-XXXXXX`) using `RAKSHA_SECRET` and canonical cluster seeds.
+- **Keyed Pseudonyms**: Mints 10-character HMAC pseudonyms (`PSN-XXXXXXXXXX`) using `RAKSHA_SECRET` and canonical cluster seeds.
 
 ### 5. Privacy Engine & Quasi-Identifier Defense (`src/privacy_engine.py`)
-- **Interval-Preserving Date Shifting**: Computes a per-patient integer offset in `[-30, +30]` (non-zero) keyed on `RAKSHA_SECRET`. Shifts all dates in a patient's timeline (admission, discharge, lab timestamps, prescription dates, birth dates) by the exact same delta:
+- **Interval-Preserving Date Shifting**: Computes a per-patient integer offset in `[-180, +180]` days (non-zero) configured via `config/policy.yaml` and keyed on `RAKSHA_SECRET`. Shifts all dates in a patient's timeline (admission, discharge, lab timestamps, prescription dates, birth dates) by the exact same delta:
   $$\text{Stay Duration}_{\text{sanitized}} = (T_{\text{dis}} + \Delta) - (T_{\text{adm}} + \Delta) = T_{\text{dis}} - T_{\text{adm}} = \text{Stay Duration}_{\text{raw}}$$
   Bed utilization and epidemiological stay durations remain **100% mathematically exact**, while calendar-based voter-list correlation attacks fail completely.
 - **Format Preservation**: Preserves original format and delimiters for `YYYY-MM-DD`, `DD/MM/YYYY`, `MM/DD/YYYY`, `DD-MM-YYYY`, `DD.MM.YYYY`, and ISO-8601 timestamps.
@@ -105,10 +106,10 @@ Evaluated against the official practice benchmark dataset (`check_dev.py` and `c
 A 100% offline, dark-mode Streamlit dashboard (`ui.py`) engineered for the Stage 2 Desk Review live demo:
 
 - **Top KPI Strip**: Realtime metrics for Files Sanitized (`192 / 200`), Quarantined Files (`8`), Canary Leaks (`0 / 4`), Medical Fidelity (`100.0%`), Speed (`0.76s`), and Peak Memory (`44.5 MB`).
-- **Tab 1 — Multilingual Clinical Redaction Diff**: Side-by-side comparison of raw input files vs. sanitized outputs across CSVs, JSON/FHIR, and Devanagari/Hindi text notes with visual badge highlighting (`[PSN-XXXXXX]` in cyan, `[REDACTED_*]` in amber, preserved vitals/meds in green) and HMAC-SHA256 filename scrub detection.
+- **Tab 1 — Multilingual Clinical Redaction Diff**: Side-by-side comparison of raw input files vs. sanitized outputs across CSVs, JSON/FHIR, and Devanagari/Hindi text notes with visual badge highlighting (`[PSN-XXXXXXXXXX]` in cyan, `[REDACTED_*]` in amber, preserved vitals/meds in green) and HMAC-SHA256 filename scrub detection.
 - **Tab 2 — Cross-Hospital Identity Resolution Explorer**: Unified patient trajectory explorer across all 59 patient clusters, displaying cross-facility care encounters alongside our dedicated **Anti-Over-Merge Safety Rationale** for the 51 unlinked records (`"patient": null`).
 - **Tab 3 — Voter-List Re-Identification Defense & Quarantine Vault**:
-  - **Quasi-Identifier Attack Simulator**: Interactive cohort filters (District, Age Band, Stay Duration) contrasting vulnerable raw records ($k=1$, direct voter roll linkage) against Secret Wards protected records ($k \ge 450$).
+  - **Quasi-Identifier Attack Simulator**: Interactive cohort filters (District, Age Band, Stay Duration) contrasting vulnerable raw records ($k=1$, direct voter roll linkage) against Secret Wards protected records (k-anonymity protected cohort).
   - **Stay Duration Invariance Proof**: Demonstrates $(T_{\text{dis}} + \Delta) - (T_{\text{adm}} + \Delta) = T_{\text{dis}} - T_{\text{adm}}$, proving 100% clinical research utility.
   - **Quarantine Vault**: Triage table displaying all 8 quarantined files identified strictly by SHA-256 hash with specific vulnerability mitigation rationales (recursion bombs, corrupt bytes, binary injection) and zero filename exposure.
 
@@ -129,7 +130,7 @@ The official 2-page project brief is frozen at the repository root:
 pip install -r requirements.txt
 
 # 2. Run firewall on dataset
-RAKSHA_SECRET=practice python3 main.py --input ~/Secret-Wards-ToolKit/dev/input --output my_output
+RAKSHA_SECRET=9f83ab24e1074c5d8a2b3c4d5e6f7081 python3 main.py --input ~/Secret-Wards-ToolKit/dev/input --output my_output
 
 # 3. Validate output contract
 python3 ~/Secret-Wards-ToolKit/validate_output.py --input ~/Secret-Wards-ToolKit/dev/input --output my_output

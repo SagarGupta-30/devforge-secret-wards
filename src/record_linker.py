@@ -345,11 +345,36 @@ class RecordLinker:
             for aadh in cand.aadhaars:
                 if aadh: by_aadhaar[aadh].append(idx)
 
+        def are_candidates_compatible(c1: PatientCandidate, c2: PatientCandidate) -> bool:
+            # 1. Compatible name (exact or transliteration/phonetic fuzzy similarity >= 75)
+            if c1.names and c2.names:
+                for n1 in c1.names:
+                    for n2 in c2.names:
+                        if n1 == n2 or rapidfuzz.fuzz.token_sort_ratio(n1, n2) >= 75:
+                            return True
+            # 2. Compatible guardian/relative name
+            if c1.relatives and c2.relatives:
+                for r1 in c1.relatives:
+                    for r2 in c2.relatives:
+                        if r1 == r2 or rapidfuzz.fuzz.token_sort_ratio(r1, r2) >= 75:
+                            return True
+            # 3. Compatible village
+            if c1.villages and c2.villages and (c1.villages & c2.villages):
+                return True
+            # If both lack names, relatives, and villages (anonymous slips on same phone)
+            if not c1.names and not c2.names and not c1.relatives and not c2.relatives and not c1.villages and not c2.villages:
+                return True
+            return False
+
         for idxs in by_mrn.values():
             for j in range(1, len(idxs)): union(idxs[0], idxs[j])
 
         for idxs in by_phone.values():
-            for j in range(1, len(idxs)): union(idxs[0], idxs[j])
+            for i in range(len(idxs)):
+                for j in range(i + 1, len(idxs)):
+                    idx_i, idx_j = idxs[i], idxs[j]
+                    if are_candidates_compatible(candidates[keys[idx_i]], candidates[keys[idx_j]]):
+                        union(idx_i, idx_j)
 
         for idxs in by_aadhaar.values():
             for j in range(1, len(idxs)): union(idxs[0], idxs[j])
@@ -430,22 +455,23 @@ class RecordLinker:
                 continue
 
             if root not in cluster_pseudonyms:
-                # Find canonical seed for cluster
-                cluster_all_hard = []
-                for m_idx in cluster_members[root]:
-                    c_cand = candidates[keys[m_idx]]
-                    cluster_all_hard.extend(c_cand.mrns)
-                    cluster_all_hard.extend(c_cand.phones)
-                    cluster_all_hard.extend(c_cand.aadhaars)
+                # Find canonical seed for cluster (incorporating name to separate phone-sharing family members)
+                c_mrns = [m for m_idx in cluster_members[root] for m in candidates[keys[m_idx]].mrns if m]
+                c_aadh = [a for m_idx in cluster_members[root] for a in candidates[keys[m_idx]].aadhaars if a]
+                c_phones = [p for m_idx in cluster_members[root] for p in candidates[keys[m_idx]].phones if p]
+                primary_id = sorted(c_mrns or c_aadh or c_phones)[0] if (c_mrns or c_aadh or c_phones) else ""
+                c_name = sorted(cluster_names[root])[0] if cluster_names[root] else ""
 
-                if cluster_all_hard:
-                    seed = sorted(cluster_all_hard)[0]
-                elif cluster_names[root]:
-                    seed = sorted(cluster_names[root])[0]
+                if primary_id and c_name:
+                    seed = f"{primary_id}|{c_name}"
+                elif primary_id:
+                    seed = primary_id
+                elif c_name:
+                    seed = c_name
                 else:
                     seed = f"cluster_{root}"
 
-                digest = hmac.new(secret, seed.encode("utf-8"), hashlib.sha256).hexdigest()[:6].upper()
+                digest = hmac.new(secret, seed.encode("utf-8"), hashlib.sha256).hexdigest()[:10].upper()
                 cluster_pseudonyms[root] = f"PSN-{digest}"
 
             pseudonym_map[k] = cluster_pseudonyms[root]

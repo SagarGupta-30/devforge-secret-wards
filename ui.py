@@ -34,37 +34,23 @@ st.set_page_config(
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_asset_b64(rel_path: str) -> str:
-    abs_path = os.path.join(HERE, rel_path)
-    if os.path.exists(abs_path):
-        with open(abs_path, "rb") as f:
-            return base64.b64encode(f.read()).decode("utf-8")
-    return ""
-
-
-BANNER_B64 = load_asset_b64("assets/field_notes_banner.jpg")
-TOWER_B64 = load_asset_b64("assets/raksha_core_tower.jpg")
-
-
 def clean_html(html_str: str) -> str:
     """Strips blank lines from HTML strings to prevent CommonMark from closing <div> tags."""
     return "\n".join(line for line in html_str.splitlines() if line.strip())
 
 
 # =============================================================================
-# Figma Make Editorial Design System CSS
+# Offline Editorial Design System CSS (100% Offline System Font Stack)
 # =============================================================================
 st.markdown(
     clean_html(
         """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-
     /* Global App Canvas: Warm Alabaster with Dark Carbon Body Ink */
     .stApp {
         background-color: #F8F7F4 !important;
         color: #334155 !important;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
     
     /* Full-width seamless block container */
@@ -98,16 +84,16 @@ st.markdown(
 
     /* Typography Classes with Explicit Dark Ink Outside Hero */
     .font-anton {
-        font-family: 'Anton', 'Impact', 'Arial Black', sans-serif !important;
+        font-family: 'Impact', 'Arial Black', -apple-system, sans-serif !important;
         letter-spacing: -0.015em !important;
         text-transform: uppercase !important;
         color: #0B0D12 !important;
     }
     .font-mono {
-        font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace !important;
+        font-family: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace !important;
     }
     .font-inter {
-        font-family: 'Inter', -apple-system, sans-serif !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         color: #334155 !important;
     }
     .main h1, .main h2, .main h3, .main h4, .main h5, .main h6 {
@@ -1122,11 +1108,31 @@ def render_homepage():
     )
 
     # 3. Band 3: Live Benchmark Banner (Warm Alabaster #F8F7F4)
-    img_html = (
-        f'<img src="data:image/jpeg;base64,{BANNER_B64}" style="width: 100%; height: 380px; object-fit: cover; filter: brightness(0.96); display: block;" />'
-        if BANNER_B64
-        else '<div style="height: 380px; background: linear-gradient(135deg, #1E293B, #0F172A); display: flex; align-items: center; justify-content: center; color: #94A3B8;">[Field Notes Visualizer]</div>'
-    )
+    runtime_val = f"{report_data.get('timing', {}).get('seconds', 0.76):.2f}S" if report_data else "0.76S"
+    img_html = """
+    <div style="height: 380px; width: 100%; background: radial-gradient(circle at 50% 50%, #111827 0%, #030712 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+        <svg width="100%" height="100%" viewBox="0 0 800 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top:0; left:0; opacity: 0.35;">
+            <circle cx="400" cy="190" r="160" stroke="#0284C7" stroke-width="1.2" stroke-dasharray="4 4"/>
+            <circle cx="400" cy="190" r="110" stroke="#00F5D4" stroke-width="1"/>
+            <circle cx="400" cy="190" r="60" stroke="#10B981" stroke-width="1.5"/>
+            <path d="M100 190 H700" stroke="#334155" stroke-width="0.8"/>
+            <path d="M400 30 V350" stroke="#334155" stroke-width="0.8"/>
+            <line x1="200" y1="80" x2="600" y2="300" stroke="#0284C7" stroke-width="0.7" stroke-opacity="0.4"/>
+            <line x1="200" y1="300" x2="600" y2="80" stroke="#00F5D4" stroke-width="0.7" stroke-opacity="0.4"/>
+        </svg>
+        <div style="z-index: 2; text-align: center; max-width: 600px; padding: 0 20px;">
+            <div style="font-family: ui-monospace, monospace; font-size: 0.85rem; color: #00F5D4; letter-spacing: 0.2em; margin-bottom: 8px; text-transform: uppercase;">
+                FIELD SURVEILLANCE & LOCAL DE-IDENTIFICATION
+            </div>
+            <div style="font-size: 1.85rem; font-weight: 800; color: #F8FAFC; letter-spacing: -0.02em; line-height: 1.25; margin-bottom: 12px;">
+                Securing Heterogeneous Health Records Across Indian Wards
+            </div>
+            <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+                Zero plaintext persistence • 100% offline edge processing • Preserving epidemiologic stay invariants
+            </div>
+        </div>
+    </div>
+    """
     banner_card_html = f"""
     <div class="benchmark-banner-frame">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;" class="font-mono">
@@ -1148,7 +1154,7 @@ def render_homepage():
                     </div>
                     <div style="width: 1px; height: 26px; background: rgba(255,255,255,0.2);"></div>
                     <div class="kpi-stat-item">
-                        <span class="kpi-stat-val">0.76S</span>
+                        <span class="kpi-stat-val">{runtime_val}</span>
                         <span class="kpi-stat-lbl">RUNTIME</span>
                     </div>
                 </div>
@@ -1347,7 +1353,7 @@ def render_3d_firewall():
             let cx = width / 2;
             let cy = height / 2 - 8;
 
-            // Draw Central Core: PSN-8BC683
+            // Draw Central Core: PSN-8BC683A19F
             let coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 22);
             coreGrad.addColorStop(0, '#FFFFFF');
             coreGrad.addColorStop(0.35, '#00F5D4');
@@ -1359,9 +1365,9 @@ def render_3d_firewall():
 
             // Core Label
             ctx.fillStyle = '#070A10';
-            ctx.font = 'bold 9px monospace';
+            ctx.font = 'bold 8px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('PSN-8BC683', cx, cy + 3);
+            ctx.fillText('PSN-8BC683A19F', cx, cy + 3);
 
             // Draw Inner Shield (Pass A: Clinical Shield, Emerald, radius 46)
             let innerVertices = baseVertices.map(v => rotatePoint([v[0]*46, v[1]*46, v[2]*46], rotX * 1.2, rotY * 1.2));
@@ -1638,16 +1644,16 @@ def render_architecture():
                         <code class="voter-formula-pill font-mono">(T_dis + Δ) − (T_adm + Δ) = Exact Stay Preserved.</code>
                     </p>
                     <p style="font-size: 0.92rem; line-height: 1.6; color: #334155; margin-bottom: 1.5rem;">
-                        5-year age banding and village suppression enforce <b>k ≥ 450 anonymity</b>. Adversaries cross-referencing public voter rolls cannot uniquely pinpoint hospitalized citizens.
+                        5-year age banding and village suppression ensure <b>k-anonymity</b> across demographic cohorts. Adversaries cross-referencing public voter rolls cannot uniquely pinpoint hospitalized citizens.
                     </p>
                     <div style="background: #FFFFFF; border-radius: 12px; padding: 16px; border: 1px solid rgba(0,0,0,0.06);">
                         <div style="font-size: 0.82rem; color: #DC2626; font-weight: 700; margin-bottom: 4px;">❌ RAW RECORD VULNERABILITY: k = 1</div>
                         <div style="font-size: 0.80rem; color: #57534E; font-family: monospace; margin-bottom: 10px;">
                             DOB 11-07-1972 + Village Bilgram + Adm 28-06-2024 → 100% Unique Match
                         </div>
-                        <div style="font-size: 0.82rem; color: #059669; font-weight: 700; margin-bottom: 4px;">🛡️ RAKSHA SHIELDED COHORT: k ≥ 450</div>
+                        <div style="font-size: 0.82rem; color: #059669; font-weight: 700; margin-bottom: 4px;">🛡️ RAKSHA SHIELDED COHORT: k-Anonymity Protected</div>
                         <div style="font-size: 0.80rem; color: #57534E; font-family: monospace;">
-                            Age Band 50-54 + District Hardoi + Shifted Date → Zero Unique Linkage
+                            Age Band 50-54 + District Hardoi + Shifted Date → Indistinguishable Cohort
                         </div>
                     </div>
                 </div>
@@ -1693,7 +1699,7 @@ def render_architecture():
                     "contract_status": "CONTRACT_OK",
                 },
                 "statutory_controls": {
-                    "section_6_purpose_limitation": "Keyed HMAC-SHA256 pseudonym generation (PSN-XXXXXX)",
+                    "section_6_purpose_limitation": "Keyed HMAC-SHA256 pseudonym generation (PSN-XXXXXXXXXX)",
                     "section_8_4_data_minimization": "6-channel PII scrubbing across Latin, Devanagari, and Hinglish",
                     "section_8_5_security_safeguards": "100% offline, internet=false, zero plaintext persistence",
                     "section_9_health_data": "Dual-pass clinical shield guarantees 100% retention of diagnoses and drugs",
@@ -1793,7 +1799,7 @@ def render_live_sandbox():
     # Process live execution
     t0 = time.perf_counter()
     _, placeholders = ClinicalShield.protect(user_note)
-    sanitized_result = PIIExtractor.clean_free_text(user_note, pid="PSN-8BC683", delta_days=-40)
+    sanitized_result = PIIExtractor.clean_free_text(user_note, pid="PSN-8BC683A19F", delta_days=-40)
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
 
     with c_sand_r:
@@ -1807,7 +1813,7 @@ def render_live_sandbox():
             <h3 class="font-mono" style="font-size: 1.05rem; margin: 0 0 1.2rem 0; color: #0B0D12;">Clinical Diff / 001</h3>
             
             <div style="background: #F8F7F4; border-radius: 14px; padding: 16px; min-height: 190px; line-height: 1.8; margin-bottom: 1.5rem; border: 1px solid rgba(0,0,0,0.04);">
-                <span class="pill-psn">[PSN-8BC683]</span>
+                <span class="pill-psn">[PSN-8BC683A19F]</span>
                 <span class="pill-redacted">(S/o [RELATIVE_NAME]), Mob: [PHONE], Village [VILLAGE],</span>
                 <span class="pill-redacted">admitted 19/05/2024 (-40d) under</span>
                 <span class="pill-clinical">🔒 Dr. Ramesh Srivastava.</span>
