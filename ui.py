@@ -16,6 +16,7 @@ import os
 import time
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from src.clinical_shield import ClinicalShield
 from src.pii_extractor import PIIExtractor
 
@@ -68,7 +69,7 @@ st.markdown(
     
     /* Full-width seamless block container */
     .main .block-container {
-        padding-top: 1.0rem !important;
+        padding-top: 1.5rem !important;
         padding-bottom: 3rem !important;
         padding-left: 2.2rem !important;
         padding-right: 2.2rem !important;
@@ -76,8 +77,24 @@ st.markdown(
         margin: 0 auto !important;
     }
 
-    /* Hide default streamlit headers & footers for pristine editorial frame */
-    #MainMenu, header, footer { visibility: hidden; }
+    /* Hide default streamlit headers, footers & decorations for pristine editorial frame */
+    #MainMenu, footer { visibility: hidden !important; }
+    header, header[data-testid="stHeader"], [data-testid="stHeader"], [data-testid="stDecoration"], [data-testid="stToolbar"] {
+        display: none !important;
+        background: transparent !important;
+        height: 0px !important;
+        visibility: hidden !important;
+    }
+
+    /* Hide Streamlit heading anchor links (🔗) */
+    [data-testid="stHeaderActionElements"],
+    .st-emotion-cache-15zrgzn,
+    a.header-anchor,
+    [data-testid="stMarkdownContainer"] a.header-anchor,
+    .main h1 a, .main h2 a, .main h3 a, .main h4 a, .main h5 a, .main h6 a {
+        display: none !important;
+        visibility: hidden !important;
+    }
 
     /* Typography Classes with Explicit Dark Ink Outside Hero */
     .font-anton {
@@ -109,7 +126,7 @@ st.markdown(
         background-color: #070A10 !important;
         border-radius: 16px !important;
         padding: 44px 52px 36px 52px !important;
-        min-height: 520px !important;
+        min-height: 540px !important;
         color: #FFFFFF !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45) !important;
@@ -120,22 +137,58 @@ st.markdown(
     div.st-key-dark_hero_container::before {
         content: "";
         position: absolute;
-        top: 15%;
-        left: -60px;
-        width: 320px;
-        height: 320px;
-        background: radial-gradient(circle, rgba(0, 245, 212, 0.14) 0%, transparent 70%);
+        top: 20%;
+        left: -80px;
+        width: 440px;
+        height: 440px;
+        background: radial-gradient(circle, rgba(0, 245, 212, 0.22) 0%, transparent 70%);
         pointer-events: none;
     }
     div.st-key-dark_hero_container::after {
         content: "";
         position: absolute;
-        bottom: 10%;
-        right: -60px;
-        width: 320px;
-        height: 320px;
-        background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 70%);
+        bottom: 12%;
+        right: -80px;
+        width: 440px;
+        height: 440px;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
         pointer-events: none;
+    }
+    .hero-center-aura {
+        position: absolute;
+        top: 32%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 650px;
+        height: 380px;
+        background: radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.16) 0%, rgba(0, 245, 212, 0.08) 40%, transparent 70%);
+        pointer-events: none;
+    }
+    .hero-arch-console {
+        position: relative;
+        width: 90%;
+        max-width: 820px;
+        margin: 2.2rem auto 0 auto;
+        height: 46px;
+        perspective: 600px;
+        pointer-events: none;
+    }
+    .hero-glass-surface {
+        width: 90%;
+        height: 30px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 70%, transparent 100%);
+        border-top: 1.5px solid rgba(255, 255, 255, 0.35);
+        border-radius: 8px 8px 0 0;
+        transform: rotateX(28deg);
+        box-shadow: 0 -10px 30px rgba(0, 245, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+    .hero-floor-reflection {
+        width: 100%;
+        height: 16px;
+        background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.08) 0%, rgba(0, 245, 212, 0.04) 30%, transparent 70%);
+        filter: blur(4px);
     }
 
     /* All text inside Dark Hero Container: Pure Crisp White */
@@ -156,39 +209,59 @@ st.markdown(
         color: #CBD5E1 !important;
     }
 
-    /* Buttons inside dark hero - Crisp High Contrast */
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"],
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"] p,
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"] span,
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"] div {
+    /* Buttons inside dark hero - Clean Single Pill with Zero Inner Borders */
+    div.st-key-dark_hero_container div.stButton > button * {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    div.st-key-dark_hero_container div.stButton > button[kind="primary"] {
         background-color: #FFFFFF !important;
         color: #070A10 !important;
         border: 1px solid #FFFFFF !important;
         font-weight: 800 !important;
         box-shadow: 0 4px 14px rgba(255,255,255,0.2) !important;
     }
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"]:hover,
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"]:hover p,
-    div.st-key-dark_hero_container div.stButton > button[kind="primary"]:hover span {
+    div.st-key-dark_hero_container div.stButton > button[kind="primary"] p,
+    div.st-key-dark_hero_container div.stButton > button[kind="primary"] span {
+        color: #070A10 !important;
+        font-weight: 800 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.st-key-dark_hero_container div.stButton > button[kind="primary"]:hover {
         background-color: #F0EFEB !important;
         color: #000000 !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 6px 20px rgba(255,255,255,0.3) !important;
     }
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"],
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] p,
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] span {
+    div.st-key-dark_hero_container div.stButton > button[kind="primary"]:hover p,
+    div.st-key-dark_hero_container div.stButton > button[kind="primary"]:hover span {
+        color: #000000 !important;
+        border: none !important;
+    }
+    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] {
         background-color: rgba(255, 255, 255, 0.08) !important;
         color: #F1F5F9 !important;
         border: 1px solid rgba(255, 255, 255, 0.22) !important;
         font-weight: 600 !important;
     }
-    div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover,
+    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] p,
+    div.st-key-dark_hero_container div.stButton > button[kind="secondary"] span {
+        color: #F1F5F9 !important;
+        font-weight: 600 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover {
+        background-color: rgba(255, 255, 255, 0.20) !important;
+        border-color: #FFFFFF !important;
+    }
     div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover p,
     div.st-key-dark_hero_container div.stButton > button[kind="secondary"]:hover span {
-        background-color: rgba(255, 255, 255, 0.20) !important;
         color: #FFFFFF !important;
-        border-color: #FFFFFF !important;
+        border: none !important;
     }
 
     /* Mission Strip: Stone Grey with Explicit Dark Carbon Ink */
@@ -273,64 +346,198 @@ st.markdown(
         white-space: nowrap !important;
         transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
+    /* Strictly strip any inner border/outline/background from button children */
+    div.stButton > button *,
+    div.stDownloadButton > button * {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
     div.stButton > button[kind="primary"],
-    div.stButton > button[kind="primary"] p,
-    div.stButton > button[kind="primary"] span,
     div.stDownloadButton > button,
-    div.stDownloadButton > button p,
-    div.stDownloadButton > button span,
-    div.stDownloadButton > button[kind="primary"],
-    div.stDownloadButton > button[kind="primary"] p {
+    div.stDownloadButton > button[kind="primary"] {
         background-color: #000000 !important;
-        color: #FFFFFF !important;
         border: 1px solid #000000 !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
-    div.stButton > button[kind="primary"]:hover,
-    div.stButton > button[kind="primary"]:hover p,
-    div.stDownloadButton > button:hover,
-    div.stDownloadButton > button:hover p {
-        background-color: #262626 !important;
+    div.stButton > button[kind="primary"] p,
+    div.stButton > button[kind="primary"] span,
+    div.stDownloadButton > button p,
+    div.stDownloadButton > button span {
         color: #FFFFFF !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.stButton > button[kind="primary"]:hover,
+    div.stDownloadButton > button:hover {
+        background-color: #262626 !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 8px 20px rgba(0,0,0,0.22) !important;
     }
-    div.stButton > button[kind="secondary"],
-    div.stButton > button[kind="secondary"] p,
-    div.stButton > button[kind="secondary"] span {
+    div.stButton > button[kind="primary"]:hover p,
+    div.stDownloadButton > button:hover p {
+        color: #FFFFFF !important;
+        border: none !important;
+    }
+    div.stButton > button[kind="secondary"] {
         background-color: #FFFFFF !important;
-        color: #0B0D12 !important;
         border: 1px solid rgba(0, 0, 0, 0.15) !important;
     }
-    div.stButton > button[kind="secondary"]:hover,
-    div.stButton > button[kind="secondary"]:hover p {
+    div.stButton > button[kind="secondary"] p,
+    div.stButton > button[kind="secondary"] span {
+        color: #0B0D12 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div.stButton > button[kind="secondary"]:hover {
         background-color: #F5F5F3 !important;
         border-color: #000000 !important;
+    }
+    div.stButton > button[kind="secondary"]:hover p {
         color: #000000 !important;
+        border: none !important;
     }
 
-    /* Custom Form Inputs */
-    div[data-baseweb="input"] {
-        background-color: #F0EFEB !important;
-        border-radius: 999px !important;
-        border: 1px solid #DDD9D2 !important;
-        padding: 2px 10px !important;
-    }
-    div[data-baseweb="input"] input {
+    /* Force Light Editorial Styling on All Streamlit Inputs (Resilient to Dark Mode) */
+    [data-testid="stTextInput"] div[data-baseweb="input"],
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] div[data-baseweb="textarea"],
+    [data-testid="stTextArea"] textarea,
+    [data-testid="stSelectbox"] div[data-baseweb="select"],
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
         color: #0B0D12 !important;
+        caret-color: #0B0D12 !important;
+        border-color: #CBD5E1 !important;
+    }
+
+    [data-testid="stTextInput"] input {
+        background-color: #FFFFFF !important;
+        color: #0B0D12 !important;
+        caret-color: #0B0D12 !important;
         font-family: 'Inter', sans-serif !important;
         font-size: 0.90rem !important;
+        padding: 8px 14px !important;
     }
-    div[data-baseweb="textarea"] {
-        background-color: #F0EFEB !important;
-        border-radius: 14px !important;
-        border: 1px solid #DDD9D2 !important;
+
+    [data-testid="stTextInput"] div[data-baseweb="input"] {
+        border-radius: 999px !important;
+        border: 1.5px solid #CBD5E1 !important;
+        background-color: #FFFFFF !important;
+        overflow: hidden !important;
     }
-    div[data-baseweb="textarea"] textarea {
+
+    [data-testid="stTextArea"] textarea {
+        background-color: #FFFFFF !important;
         color: #0B0D12 !important;
+        caret-color: #0B0D12 !important;
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 0.88rem !important;
         line-height: 1.6 !important;
+        border-radius: 14px !important;
+        padding: 12px 14px !important;
+    }
+
+    [data-testid="stTextArea"] div[data-baseweb="textarea"] {
+        background-color: #FFFFFF !important;
+        border: 1.5px solid #CBD5E1 !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+    }
+
+    [data-testid="stSelectbox"] div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #0B0D12 !important;
+        border: 1.5px solid #CBD5E1 !important;
+        border-radius: 999px !important;
+        min-height: 42px !important;
+    }
+
+    [data-testid="stSelectbox"] div[data-baseweb="select"] span,
+    [data-testid="stSelectbox"] div[data-baseweb="select"] div {
+        color: #0B0D12 !important;
+        background-color: transparent !important;
+    }
+
+    /* Dropdown Popover Menus */
+    div[data-baseweb="popover"],
+    div[data-baseweb="popover"] ul,
+    div[data-baseweb="menu"],
+    ul[role="listbox"] {
+        background-color: #FFFFFF !important;
+        border: 1.5px solid #CBD5E1 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+    }
+
+    div[data-baseweb="popover"] li,
+    ul[role="listbox"] li,
+    li[role="option"] {
+        background-color: #FFFFFF !important;
+        color: #0B0D12 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 0.88rem !important;
+    }
+
+    div[data-baseweb="popover"] li:hover,
+    ul[role="listbox"] li:hover,
+    li[role="option"]:hover,
+    li[aria-selected="true"] {
+        background-color: #F1F5F9 !important;
+        color: #000000 !important;
+    }
+
+    label[data-testid="stWidgetLabel"] p {
+        color: #475569 !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 0.72rem !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        font-weight: 700 !important;
+    }
+
+    /* Explicit Disabled Inputs & Textareas Override (Prevents WebKit/BaseWeb Washout) */
+    textarea:disabled,
+    input:disabled,
+    [data-testid="stTextArea"] textarea[disabled],
+    [data-testid="stTextInput"] input[disabled],
+    div[data-baseweb="input"] input:disabled,
+    div[data-baseweb="textarea"] textarea:disabled {
+        opacity: 1 !important;
+        color: #0B0D12 !important;
+        -webkit-text-fill-color: #0B0D12 !important;
+        background-color: #F8FAFC !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        cursor: text !important;
+        border: 1.5px solid #CBD5E1 !important;
+    }
+
+    div.st-key-repo_inspector_container,
+    div.st-key-statutory_audit_container {
+        background-color: #FFFFFF !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        border-radius: 18px !important;
+        padding: 2.2rem !important;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04) !important;
+        margin-top: 1.5rem !important;
+    }
+
+    /* Voter-List Invariance Formula Pill */
+    .voter-formula-pill,
+    code.voter-formula-pill,
+    span.voter-formula-pill {
+        background: #0B0D12 !important;
+        background-color: #0B0D12 !important;
+        color: #00F5D4 !important;
+        border: 1px solid rgba(0, 245, 212, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 6px 14px !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-weight: 600 !important;
+        display: inline-block !important;
+        margin-top: 6px !important;
+        letter-spacing: 0.02em !important;
     }
 
     /* Floating Pill KPI Card on Image */
@@ -588,18 +795,19 @@ def render_homepage():
         # Hero Nav inside Frame
         render_top_nav(is_dark=True)
 
-        # Hero Center Title & Subtitle
+        # Hero Center Title & Subtitle with Ambient Aura
         st.markdown(
             clean_html(
                 """
-                <div style="text-align: center; padding: 4.2rem 1rem 2.0rem 1rem;">
-                    <div class="font-mono hero-kicker" style="font-size: 0.76rem; letter-spacing: 0.22em; color: #94A3B8; text-transform: uppercase; margin-bottom: 1.4rem;">
+                <div style="text-align: center; padding: 4.2rem 1rem 1.4rem 1rem; position: relative;">
+                    <div class="hero-center-aura"></div>
+                    <div class="font-mono hero-kicker" style="font-size: 0.76rem; letter-spacing: 0.22em; color: #94A3B8; text-transform: uppercase; margin-bottom: 1.4rem; position: relative; z-index: 2;">
                         HEALTHCARE PRIVACY FIREWALL / INDIA
                     </div>
-                    <h1 class="font-anton" style="font-size: 5.4rem; line-height: 0.95; color: #FFFFFF !important; margin: 0 0 1.5rem 0; letter-spacing: -0.02em;">
+                    <h1 class="font-anton" style="font-size: 5.4rem; line-height: 0.95; color: #FFFFFF !important; margin: 0 0 1.5rem 0; letter-spacing: -0.02em; position: relative; z-index: 2;">
                         SHIELD YOUR<br/>PATIENT DATA
                     </h1>
-                    <p class="font-inter hero-sub" style="font-size: 1.15rem; color: #CBD5E1; max-width: 620px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+                    <p class="font-inter hero-sub" style="font-size: 1.15rem; color: #CBD5E1; max-width: 620px; margin: 0 auto 1.5rem auto; line-height: 1.6; position: relative; z-index: 2;">
                         Offline, CPU-only clinical privacy firewall engineered for zero-leak multilingual Indian health systems.
                     </p>
                 </div>
@@ -614,11 +822,24 @@ def render_homepage():
             if st.button("GET STARTED ↗", key="hero_get_started", type="primary", use_container_width=True):
                 set_page("Live Sandbox")
 
+        # Architectural Glass Console & Marble Floor Reflection
+        st.markdown(
+            clean_html(
+                """
+                <div class="hero-arch-console">
+                    <div class="hero-glass-surface"></div>
+                    <div class="hero-floor-reflection"></div>
+                </div>
+                """
+            ),
+            unsafe_allow_html=True,
+        )
+
         # Hero Micro Status Bar
         st.markdown(
             clean_html(
                 """
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem; margin-top: 3.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.2rem; margin-top: 1.8rem;">
                     <div class="font-mono" style="font-size: 0.75rem; letter-spacing: 0.15em; color: #94A3B8;">
                         SYSTEM STATUS &nbsp;<span style="color: #FFFFFF; font-weight: 700;">ALL WARDS PROTECTED</span>
                     </div>
@@ -704,6 +925,303 @@ def render_homepage():
 
 
 # =============================================================================
+# 3D Holographic WebGL / HTML5 Canvas Firewall Component (100% Offline)
+# =============================================================================
+def render_3d_firewall():
+    html_code = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="utf-8">
+    <style>
+        body { margin: 0; padding: 0; background: #0A0D14; color: #f0f6fc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+        .canvas-container { position: relative; width: 100%; height: 380px; background: radial-gradient(circle at 50% 45%, #0D1628 0%, #060911 100%); border: 1px solid rgba(56, 189, 248, 0.30); border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
+        #firewallCanvas { width: 100%; height: 100%; display: block; cursor: grab; }
+        #firewallCanvas:active { cursor: grabbing; }
+        .hud-overlay { position: absolute; top: 12px; right: 14px; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
+        .hud-badge { background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 6px; padding: 3px 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; font-family: monospace; }
+        .hud-badge.cyan { color: #00F5D4; border-color: rgba(0, 245, 212, 0.5); }
+        .hud-badge.emerald { color: #10B981; border-color: rgba(16, 185, 129, 0.5); }
+        .hud-badge.amber { color: #F59E0B; border-color: rgba(245, 158, 11, 0.5); }
+        .hud-title { position: absolute; bottom: 10px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; }
+        .hud-title span { font-size: 10px; color: #94A3B8; font-family: monospace; letter-spacing: 0.8px; }
+    </style>
+    </head>
+    <body>
+    <div class="canvas-container">
+        <canvas id="firewallCanvas"></canvas>
+        <div class="hud-overlay">
+            <div class="hud-badge cyan">⚡ PASS A: CLINICAL SHIELD</div>
+            <div class="hud-badge emerald">🛡️ PASS B: 6-CHANNEL SCRUBBER</div>
+            <div class="hud-badge amber">🔒 PATIENT: NULL SATELLITE</div>
+        </div>
+        <div class="hud-title">
+            <span>RAKSHA CORE / 3D GRAPH FIREWALL</span>
+            <span style="color: #00F5D4;">DRAG TO ORBIT</span>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('firewallCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = canvas.offsetWidth;
+        let height = canvas.height = canvas.offsetHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        });
+
+        // 3D Math Vertices: Double Icosahedron Shield
+        const phi = (1 + Math.sqrt(5)) / 2;
+        let baseVertices = [
+            [-1,  phi, 0], [ 1,  phi, 0], [-1, -phi, 0], [ 1, -phi, 0],
+            [ 0, -1,  phi], [ 0,  1,  phi], [ 0, -1, -phi], [ 0,  1, -phi],
+            [ phi, 0, -1], [ phi, 0,  1], [-phi, 0, -1], [-phi, 0,  1]
+        ];
+        baseVertices = baseVertices.map(v => {
+            let len = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+            return [v[0]/len, v[1]/len, v[2]/len];
+        });
+
+        const edges = [
+            [0,11],[0,5],[0,1],[0,7],[0,10],[1,5],[1,9],[1,8],[1,7],[2,11],[2,4],[2,3],[2,6],[2,10],
+            [3,9],[3,4],[3,6],[3,8],[4,5],[4,9],[4,11],[5,9],[5,11],[6,7],[6,8],[6,10],[7,8],[7,10],[8,9],[10,11]
+        ];
+
+        // Orbiting hospital record nodes
+        const recordNodes = [
+            { name: "English CSV (Claims)", angle: 0, dist: 130, color: "#38BDF8", size: 5 },
+            { name: "Devanagari OPD (Notes)", angle: Math.PI * 0.5, dist: 125, color: "#A855F7", size: 5 },
+            { name: "Hinglish Note (Discharge)", angle: Math.PI, dist: 135, color: "#38BDF8", size: 5 },
+            { name: "FHIR JSON (Labs)", angle: Math.PI * 1.5, dist: 120, color: "#10B981", size: 5 },
+            { name: "patient: null (Anti-Over-Merge)", angle: 2.3, dist: 175, color: "#F59E0B", size: 4 },
+            { name: "patient: null (1.00 Precision)", angle: 5.1, dist: 180, color: "#F59E0B", size: 4 }
+        ];
+
+        let rotX = 0.25, rotY = 0.35;
+        let isDragging = false, lastMouseX = 0, lastMouseY = 0;
+
+        canvas.addEventListener('mousedown', e => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            let dx = e.clientX - lastMouseX;
+            let dy = e.clientY - lastMouseY;
+            rotY += dx * 0.008;
+            rotX += dy * 0.008;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', e => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastMouseX = e.touches[0].clientX;
+                lastMouseY = e.touches[0].clientY;
+            }
+        });
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('touchmove', e => {
+            if (!isDragging || e.touches.length !== 1) return;
+            let dx = e.touches[0].clientX - lastMouseX;
+            let dy = e.touches[0].clientY - lastMouseY;
+            rotY += dx * 0.008;
+            rotX += dy * 0.008;
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+        });
+
+        // Particle System: Red PII deflected, Emerald Medical preserved
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.type = Math.random() > 0.45 ? 'pii' : 'clin';
+                let angle = Math.random() * Math.PI * 2;
+                let dist = 160 + Math.random() * 80;
+                this.x = Math.cos(angle) * dist;
+                this.y = (Math.random() - 0.5) * 80;
+                this.z = Math.sin(angle) * dist;
+                let speed = 1.0 + Math.random() * 1.4;
+                this.vx = -Math.cos(angle) * speed;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.vz = -Math.sin(angle) * speed;
+                this.deflected = false;
+                this.life = 120;
+            }
+            update() {
+                let dist = Math.sqrt(this.x*this.x + this.y*this.y + this.z*this.z);
+                if (this.type === 'pii' && dist < 65 && !this.deflected) {
+                    this.deflected = true;
+                    this.vx = (this.x / dist) * 2.2 + (Math.random()-0.5);
+                    this.vy = (this.y / dist) * 2.2 + (Math.random()-0.5);
+                    this.vz = (this.z / dist) * 2.2 + (Math.random()-0.5);
+                }
+                this.x += this.vx;
+                this.y += this.vy;
+                this.z += this.vz;
+                this.life--;
+                if (this.life <= 0 || (this.type === 'clin' && dist < 14)) {
+                    this.reset();
+                }
+            }
+        }
+
+        const particles = Array.from({length: 32}, () => new Particle());
+
+        function rotatePoint(p, rx, ry) {
+            let cosY = Math.cos(ry), sinY = Math.sin(ry);
+            let x1 = p[0] * cosY + p[2] * sinY;
+            let z1 = -p[0] * sinY + p[2] * cosY;
+            let cosX = Math.cos(rx), sinX = Math.sin(rx);
+            let y2 = p[1] * cosX - z1 * sinX;
+            let z2 = p[1] * sinX + z1 * cosX;
+            return [x1, y2, z2];
+        }
+
+        function project(p, cx, cy) {
+            let f = 300;
+            let z = p[2] + 360;
+            let scale = f / z;
+            return [p[0] * scale + cx, p[1] * scale + cy, scale];
+        }
+
+        let tick = 0;
+        function animate() {
+            tick += 0.012;
+            if (!isDragging) {
+                rotY += 0.005;
+                rotX += 0.002;
+            }
+
+            ctx.clearRect(0, 0, width, height);
+            let cx = width / 2;
+            let cy = height / 2 - 8;
+
+            // Draw Central Core: PSN-8BC683
+            let coreGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 22);
+            coreGrad.addColorStop(0, '#FFFFFF');
+            coreGrad.addColorStop(0.35, '#00F5D4');
+            coreGrad.addColorStop(1, 'rgba(0, 245, 212, 0)');
+            ctx.fillStyle = coreGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core Label
+            ctx.fillStyle = '#070A10';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('PSN-8BC683', cx, cy + 3);
+
+            // Draw Inner Shield (Pass A: Clinical Shield, Emerald, radius 46)
+            let innerVertices = baseVertices.map(v => rotatePoint([v[0]*46, v[1]*46, v[2]*46], rotX * 1.2, rotY * 1.2));
+            let innerProj = innerVertices.map(v => project(v, cx, cy));
+
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
+            ctx.lineWidth = 1;
+            edges.forEach(e => {
+                let p1 = innerProj[e[0]];
+                let p2 = innerProj[e[1]];
+                ctx.beginPath();
+                ctx.moveTo(p1[0], p1[1]);
+                ctx.lineTo(p2[0], p2[1]);
+                ctx.stroke();
+            });
+
+            // Draw Outer Shield (Pass B: 6-Channel Scrubber, Cyan, radius 65)
+            let outerVertices = baseVertices.map(v => rotatePoint([v[0]*65, v[1]*65, v[2]*65], -rotX, -rotY));
+            let outerProj = outerVertices.map(v => project(v, cx, cy));
+
+            ctx.strokeStyle = 'rgba(0, 245, 212, 0.55)';
+            ctx.lineWidth = 1.2;
+            edges.forEach(e => {
+                let p1 = outerProj[e[0]];
+                let p2 = outerProj[e[1]];
+                ctx.beginPath();
+                ctx.moveTo(p1[0], p1[1]);
+                ctx.lineTo(p2[0], p2[1]);
+                ctx.stroke();
+            });
+
+            // Draw Outer Vertices Nodes
+            outerProj.forEach(p => {
+                ctx.fillStyle = '#00F5D4';
+                ctx.beginPath();
+                ctx.arc(p[0], p[1], 2 * p[2], 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw Particles
+            particles.forEach(pt => {
+                pt.update();
+                let rotP = rotatePoint([pt.x, pt.y, pt.z], rotX, rotY);
+                let prj = project(rotP, cx, cy);
+
+                ctx.beginPath();
+                ctx.arc(prj[0], prj[1], (pt.type === 'pii' ? 2.5 : 2.0) * prj[2], 0, Math.PI * 2);
+                if (pt.type === 'pii') {
+                    ctx.fillStyle = pt.deflected ? 'rgba(239, 68, 68, 0.85)' : 'rgba(248, 113, 113, 0.7)';
+                    ctx.shadowColor = '#EF4444';
+                    ctx.shadowBlur = pt.deflected ? 6 : 2;
+                } else {
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
+                    ctx.shadowColor = '#10B981';
+                    ctx.shadowBlur = 4;
+                }
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            // Draw Orbiting Record Nodes & Linking Constellation Lines
+            recordNodes.forEach((node, idx) => {
+                let curAngle = node.angle + tick * (idx >= 4 ? 0.3 : 0.6);
+                let nx = Math.cos(curAngle) * node.dist;
+                let ny = Math.sin(curAngle * 1.5) * 22;
+                let nz = Math.sin(curAngle) * node.dist;
+
+                let rotN = rotatePoint([nx, ny, nz], rotX, rotY);
+                let prj = project(rotN, cx, cy);
+
+                if (idx < 4) {
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.22)';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(prj[0], prj[1]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                ctx.fillStyle = node.color;
+                ctx.beginPath();
+                ctx.arc(prj[0], prj[1], node.size * prj[2], 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = node.color;
+                ctx.font = '9px monospace';
+                ctx.textAlign = prj[0] > cx ? 'left' : 'right';
+                let offset = prj[0] > cx ? 7 : -7;
+                ctx.fillText(node.name, prj[0] + offset, prj[1] + 3);
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+    </body>
+    </html>
+    """
+    components.html(html_code, height=395)
+
+
+# =============================================================================
 # PAGE 2: ARCHITECTURE
 # =============================================================================
 def render_architecture():
@@ -737,13 +1255,14 @@ def render_architecture():
             unsafe_allow_html=True,
         )
 
-        # 5-Stage Pipeline Breakdown Table
+        # 6-Stage Pipeline Breakdown Table
         stages = [
             ("01", "Quarantine", "HMAC filename scrubbing & corrupt isolation"),
-            ("02", "Pass A", "Immutable clinical terminology locking"),
-            ("03", "Pass B", "6-channel multilingual PII redaction"),
-            ("04", "Cross-script", "ITRANS + Double Metaphone phonetic linking"),
-            ("05", "Date shield", "Interval-preserving HMAC calendar shift"),
+            ("02", "Pass A Clinical Shield", "Immutable clinical terminology locking"),
+            ("03", "Pass B 6-Channel Scrubber", "Multilingual PII redaction (Hindi, Hinglish, English)"),
+            ("04", "Cross-Script Phonetic Linker", "ITRANS + Double Metaphone graph clustering"),
+            ("05", "Interval-Preserving Date Shift", "Cryptographic HMAC calendar shift"),
+            ("06", "Output Verification", "Zero-leak audit & format contract enforcement"),
         ]
         pipeline_html = "<div style='margin-bottom: 2rem;'>" + "".join(
             f'<div class="pipeline-row"><div><span class="pipeline-num">{num}</span><span class="pipeline-name">{name}</span></div><div class="pipeline-desc">{desc}</div></div>'
@@ -787,24 +1306,21 @@ def render_architecture():
             )
 
     with c_arch_r:
-        # Architectural Raksha Core Tower Card
-        tower_img_html = (
-            f'<img src="data:image/jpeg;base64,{TOWER_B64}" style="width: 100%; height: 480px; object-fit: cover; display: block;" />'
-            if TOWER_B64
-            else '<div style="height: 480px; background: #111; display: flex; align-items: center; justify-content: center; color: #00F5D4;">[RAKSHA CORE TOWER R-06]</div>'
+        # 3D Interactive WebGL / Canvas Holographic Firewall Core
+        st.markdown(
+            clean_html(
+                """
+                <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 18px; padding: 1.5rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;" class="font-mono">
+                        <span style="font-size: 0.75rem; color: #78716C; letter-spacing: 0.12em;">3D CRYPTOGRAPHIC FIREWALL</span>
+                        <span style="font-size: 0.72rem; color: #00F5D4; font-weight: 700; background: #0A0D14; padding: 2px 8px; border-radius: 4px;">● LIVE 3D CANVAS</span>
+                    </div>
+                """
+            ),
+            unsafe_allow_html=True,
         )
-        tower_card_html = f"""
-        <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 18px; padding: 1.5rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
-            <div style="position: relative; border-radius: 12px; overflow: hidden; background: #0A0A0A;">
-                {tower_img_html}
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(10, 10, 10, 0.90); backdrop-filter: blur(8px); padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1);" class="font-mono">
-                    <span class="tower-tag-raksha">RAKSHA CORE / R-06</span>
-                    <span class="tower-tag-cpu">CPU-ONLY SYSTEM</span>
-                </div>
-            </div>
-        </div>
-        """
-        st.markdown(clean_html(tower_card_html), unsafe_allow_html=True)
+        render_3d_firewall()
+        st.markdown("</div>", unsafe_allow_html=True)
 
         # Cross-Hospital Linking Trajectory Card
         st.markdown(
@@ -874,7 +1390,7 @@ def render_architecture():
                     </h2>
                     <p style="font-size: 1.0rem; line-height: 1.65; color: #1E293B; font-weight: 500; margin-bottom: 1.2rem;">
                         Mathematical stay-duration invariance:<br/>
-                        <code style="background: rgba(0,0,0,0.06); padding: 4px 8px; border-radius: 6px;">(T_dis + Δ) − (T_adm + Δ) = Exact Stay Preserved.</code>
+                        <code class="voter-formula-pill font-mono">(T_dis + Δ) − (T_adm + Δ) = Exact Stay Preserved.</code>
                     </p>
                     <p style="font-size: 0.92rem; line-height: 1.6; color: #334155; margin-bottom: 1.5rem;">
                         5-year age banding and village suppression enforce <b>k ≥ 450 anonymity</b>. Adversaries cross-referencing public voter rolls cannot uniquely pinpoint hospitalized citizens.
@@ -896,74 +1412,72 @@ def render_architecture():
         )
 
     with c_voter_r:
-        st.markdown(
-            clean_html(
-                """
-                <div style="background: #FFFFFF; border-radius: 18px; padding: 2.0rem; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
-                    <div class="font-mono" style="font-size: 0.72rem; color: #78716C; letter-spacing: 0.12em; margin-bottom: 1rem;">
-                        STATUTORY AUDIT GENERATOR / SECTIONS 6–9
-                    </div>
-                """
-            ),
-            unsafe_allow_html=True,
-        )
-
-        c_f1, c_f2 = st.columns(2)
-        with c_f1:
-            st.text_input("DISTRICT COHORT", value="Hardoi", key="arch_cohort_dist")
-        with c_f2:
-            st.text_input("AGE BAND", value="50-54", key="arch_cohort_age")
-
-        st.text_input("HMAC SECRET KEY SALT", value="In-memory only (ephemeral)", disabled=True)
-        st.checkbox("Include India DPDP Act 2023 (Sections 6–9) Compliance Attestation", value=True)
-
-        audit_cert_json = {
-            "standard": "DPDP_Act_2023_Health_Data_Audit_Standard_v1.0",
-            "legislation": "Digital Personal Data Protection Act, 2023 (Act No. 22 of 2023), Government of India",
-            "team_id": "devforge-secret-wards",
-            "repository": "https://github.com/SagarGupta-30/devforge-secret-wards",
-            "audit_timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-            "compliance_status": "FULLY_COMPLIANT",
-            "audit_metrics": {
-                "personal_data_leaks": "0 / 3230 (0.0% Leaks)",
-                "medical_values_preserved": "4855 / 4855 (100.0%)",
-                "canary_tokens_leaked": "0 / 4",
-                "record_linking_f05": 0.99,
-                "contract_status": "CONTRACT_OK",
-            },
-            "statutory_controls": {
-                "section_6_purpose_limitation": "Keyed HMAC-SHA256 pseudonym generation (PSN-XXXXXX)",
-                "section_8_4_data_minimization": "6-channel PII scrubbing across Latin, Devanagari, and Hinglish",
-                "section_8_5_security_safeguards": "100% offline, internet=false, zero plaintext persistence",
-                "section_9_health_data": "Dual-pass clinical shield guarantees 100% retention of diagnoses and drugs",
-            },
-        }
-
-        st.download_button(
-            label="GENERATE AUDIT CERTIFICATE ↗",
-            data=json.dumps(audit_cert_json, indent=2),
-            file_name="raksha_dpdp_audit_certificate.json",
-            mime="application/json",
-            type="primary",
-            use_container_width=True,
-        )
-
-        with st.expander("Inspect Quarantine Vault (8 Blocked Files)"):
+        with st.container(key="statutory_audit_container"):
             st.markdown(
                 clean_html(
                     """
-                    <div style="font-size: 0.80rem; font-family: monospace; color: #44403C; line-height: 1.6;">
-                        • <code>corrupt_bytes</code>: Undecodable byte sequences isolated to prevent heap crashes.<br/>
-                        • <code>excessive_depth</code>: JSON nesting depth > 100 isolated to prevent stack bombs.<br/>
-                        • <code>empty_file</code>: 0-byte inputs isolated to prevent null pointer exceptions.<br/>
-                        • <b>Tracking:</b> Files referenced strictly by SHA-256 hash with zero raw filenames.
+                    <div class="font-mono" style="font-size: 0.72rem; color: #78716C; letter-spacing: 0.12em; margin-bottom: 1.2rem; font-weight: 700;">
+                        STATUTORY AUDIT GENERATOR / SECTIONS 6–9
                     </div>
                     """
                 ),
                 unsafe_allow_html=True,
             )
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            c_f1, c_f2 = st.columns(2)
+            with c_f1:
+                st.text_input("DISTRICT COHORT", value="Hardoi", key="arch_cohort_dist")
+            with c_f2:
+                st.text_input("AGE BAND", value="50-54", key="arch_cohort_age")
+
+            st.text_input("HMAC SECRET KEY SALT", value="In-memory only (ephemeral)", disabled=True)
+            st.checkbox("Include India DPDP Act 2023 (Sections 6–9) Compliance Attestation", value=True)
+
+            audit_cert_json = {
+                "standard": "DPDP_Act_2023_Health_Data_Audit_Standard_v1.0",
+                "legislation": "Digital Personal Data Protection Act, 2023 (Act No. 22 of 2023), Government of India",
+                "team_id": "devforge-secret-wards",
+                "repository": "https://github.com/SagarGupta-30/devforge-secret-wards",
+                "audit_timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+                "compliance_status": "FULLY_COMPLIANT",
+                "audit_metrics": {
+                    "personal_data_leaks": "0 / 3230 (0.0% Leaks)",
+                    "medical_values_preserved": "4855 / 4855 (100.0%)",
+                    "canary_tokens_leaked": "0 / 4",
+                    "record_linking_f05": 0.99,
+                    "contract_status": "CONTRACT_OK",
+                },
+                "statutory_controls": {
+                    "section_6_purpose_limitation": "Keyed HMAC-SHA256 pseudonym generation (PSN-XXXXXX)",
+                    "section_8_4_data_minimization": "6-channel PII scrubbing across Latin, Devanagari, and Hinglish",
+                    "section_8_5_security_safeguards": "100% offline, internet=false, zero plaintext persistence",
+                    "section_9_health_data": "Dual-pass clinical shield guarantees 100% retention of diagnoses and drugs",
+                },
+            }
+
+            st.download_button(
+                label="GENERATE AUDIT CERTIFICATE ↗",
+                data=json.dumps(audit_cert_json, indent=2),
+                file_name="raksha_dpdp_audit_certificate.json",
+                mime="application/json",
+                type="primary",
+                use_container_width=True,
+            )
+
+            with st.expander("Inspect Quarantine Vault (8 Blocked Files)"):
+                st.markdown(
+                    clean_html(
+                        """
+                        <div style="font-size: 0.80rem; font-family: monospace; color: #44403C; line-height: 1.6;">
+                            • <code>corrupt_bytes</code>: Undecodable byte sequences isolated to prevent heap crashes.<br/>
+                            • <code>excessive_depth</code>: JSON nesting depth > 100 isolated to prevent stack bombs.<br/>
+                            • <code>empty_file</code>: 0-byte inputs isolated to prevent null pointer exceptions.<br/>
+                            • <b>Tracking:</b> Files referenced strictly by SHA-256 hash with zero raw filenames.
+                        </div>
+                        """
+                    ),
+                    unsafe_allow_html=True,
+                )
 
     # Footer
     render_footer("CONTRACT OK • VERIFIED")
@@ -973,17 +1487,7 @@ def render_architecture():
 # PAGE 3: LIVE SANDBOX
 # =============================================================================
 def render_live_sandbox():
-    # Top Editorial Header
-    st.markdown(
-        clean_html(
-            """
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 0.3rem;">
-                <span class="font-mono" style="font-size: 0.70rem; letter-spacing: 0.16em; color: #78716C;">THREE-PAGE PRIVACY SUITE</span>
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
+    # Top Editorial Header on #F8F7F4
     render_top_nav(is_dark=False)
 
     st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
@@ -1091,68 +1595,70 @@ def render_live_sandbox():
     st.markdown("<div style='height: 2.5rem;'></div>", unsafe_allow_html=True)
 
     # Interactive Dataset File Selector & Diff Inspector
-    st.markdown(
-        clean_html(
-            """
-            <div style="background: #FFFFFF; border: 1px solid rgba(0,0,0,0.08); border-radius: 18px; padding: 2.0rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+    with st.container(key="repo_inspector_container"):
+        st.markdown(
+            clean_html(
+                """
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 1.0rem;">
                     <div>
-                        <h3 class="font-anton" style="font-size: 1.8rem; margin: 0; color: #0B0D12 !important;">INSPECT PRACTICE REPOSITORY FILES</h3>
-                        <p style="font-size: 0.88rem; color: #78716C; margin: 4px 0 0 0;">Inspect any of the 192 sanitized files generated by Secret Wards side-by-side.</p>
+                        <h3 class="font-anton" style="font-size: 1.85rem; margin: 0; line-height: 1.1; color: #0B0D12 !important; letter-spacing: -0.01em;">INSPECT PRACTICE REPOSITORY FILES</h3>
+                        <p style="font-size: 0.88rem; color: #64748B; margin: 4px 0 0 0; line-height: 1.5;">Inspect any of the 192 sanitized files generated by Secret Wards side-by-side.</p>
                     </div>
-                    <span class="font-mono" style="font-size: 0.75rem; background: #F0EFEB; padding: 6px 12px; border-radius: 999px;">192 / 200 SANITIZED</span>
+                    <div style="padding-left: 1.5rem;">
+                        <span class="font-mono" style="font-size: 0.75rem; color: #0F172A !important; background: #E2E8F0; border: 1px solid #CBD5E1; padding: 6px 14px; border-radius: 999px; font-weight: 700; white-space: nowrap; display: inline-block;">192 / 200 SANITIZED</span>
+                    </div>
                 </div>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
+                """
+            ),
+            unsafe_allow_html=True,
+        )
 
-    if report_data:
-        sanitized_files = [f for f in report_data.get("files", []) if f.get("status") == "sanitized" and f.get("output")]
-        file_choices = {f["output"]: f for f in sanitized_files}
-        sel_file = st.selectbox("Select File to View:", list(file_choices.keys()), key="file_diff_sel")
-        f_meta = file_choices[sel_file]
+        if report_data:
+            sanitized_files = [f for f in report_data.get("files", []) if f.get("status") == "sanitized" and f.get("output")]
+            file_choices = {f["output"]: f for f in sanitized_files}
+            sel_file = st.selectbox("Select File to View:", list(file_choices.keys()), key="file_diff_sel")
+            f_meta = file_choices[sel_file]
 
-        out_path = os.path.join(OUTPUT_DIR, sel_file)
-        if os.path.exists(out_path):
-            with open(out_path, "r", encoding="utf-8", errors="ignore") as fp:
-                content = fp.read()
+            out_path = os.path.join(OUTPUT_DIR, sel_file)
+            if os.path.exists(out_path):
+                with open(out_path, "r", encoding="utf-8", errors="ignore") as fp:
+                    content = fp.read()
 
-            c_f_l, c_f_r = st.columns(2)
-            with c_f_l:
-                st.markdown(f"**Sanitized File:** `{sel_file}`")
-                st.markdown(f"**Input Hash:** `{f_meta.get('input_sha256', '')[:20]}...`")
-                if sel_file.endswith(".csv"):
-                    try:
-                        df = pd.read_csv(out_path)
-                        st.dataframe(df.head(15), use_container_width=True)
-                    except Exception as e:
-                        st.text(f"CSV read: {e}")
-                elif sel_file.endswith(".json") or sel_file.endswith(".jsonl"):
-                    try:
-                        j_data = json.loads(content)
-                        st.json(j_data)
-                    except Exception:
-                        st.text(content[:1000])
-                else:
-                    st.text_area("Sanitized Content", value=content, height=220, disabled=True)
+                c_f_l, c_f_r = st.columns(2)
+                with c_f_l:
+                    st.markdown(f"**Sanitized File:** `{sel_file}`")
+                    st.markdown(f"**Input Hash:** `{f_meta.get('input_sha256', '')[:20]}...`")
+                    if sel_file.endswith(".csv"):
+                        try:
+                            df = pd.read_csv(out_path)
+                            st.dataframe(df.head(15), use_container_width=True)
+                        except Exception as e:
+                            st.text(f"CSV read: {e}")
+                    elif sel_file.endswith(".json") or sel_file.endswith(".jsonl"):
+                        try:
+                            j_data = json.loads(content)
+                            st.json(j_data)
+                        except Exception:
+                            st.text(content[:1000])
+                    else:
+                        st.markdown("**Sanitized Content:**")
+                        st.code(content, language="markdown")
 
-            with c_f_r:
-                st.markdown("**Protection Verification & Compliance:**")
-                st.markdown(
-                    clean_html(
-                        r"""
-                        <div style="background: #F8F7F4; border-radius: 12px; padding: 16px; font-size: 0.84rem; line-height: 1.6; border: 1px solid rgba(0,0,0,0.06);" class="font-mono">
-                            • <b>Filename Sealed:</b> Patient name stripped; HMAC token assigned.<br/>
-                            • <b>Clinical Entities:</b> 100% vital signs &amp; drugs preserved.<br/>
-                            • <b>Date Shifts:</b> Per-patient shift applied (T<sub>adm</sub> and T<sub>dis</sub> shifted equally).<br/>
-                            • <b>Quasi-Identifiers:</b> District kept, village and mohalla redacted.
-                        </div>
-                        """
-                    ),
-                    unsafe_allow_html=True,
-                )
-    st.markdown("</div>", unsafe_allow_html=True)
+                with c_f_r:
+                    st.markdown("**Protection Verification & Compliance:**")
+                    st.markdown(
+                        clean_html(
+                            r"""
+                            <div style="background: #F8F7F4; border-radius: 12px; padding: 16px; font-size: 0.84rem; line-height: 1.6; border: 1px solid rgba(0,0,0,0.06);" class="font-mono">
+                                • <b>Filename Sealed:</b> Patient name stripped; HMAC token assigned.<br/>
+                                • <b>Clinical Entities:</b> 100% vital signs &amp; drugs preserved.<br/>
+                                • <b>Date Shifts:</b> Per-patient shift applied (T<sub>adm</sub> and T<sub>dis</sub> shifted equally).<br/>
+                                • <b>Quasi-Identifiers:</b> District kept, village and mohalla redacted.
+                            </div>
+                            """
+                        ),
+                        unsafe_allow_html=True,
+                    )
 
     # Bottom 3-Column Info Strip
     st.markdown(
