@@ -58,10 +58,11 @@ st.markdown(
     clean_html(
         """
 <style>
-    /* Global App Canvas: Warm Alabaster with Dark Carbon Body Ink */
+    /* Global App Canvas: Deep Obsidian */
     .stApp {
-        background-color: #F8F7F4 !important;
-        color: #334155 !important;
+        background-color: #06090F !important;
+        background: #06090F !important;
+        color: #E2E8F0 !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
     
@@ -81,6 +82,16 @@ st.markdown(
         display: none !important;
         background: transparent !important;
         height: 0px !important;
+        visibility: hidden !important;
+    }
+
+    /* Eliminate Streamlit Stale-Element Dimming & Status Spinner Delay */
+    [data-stale="true"] {
+        opacity: 1 !important;
+        transition: none !important;
+    }
+    [data-testid="stStatusWidget"] {
+        display: none !important;
         visibility: hidden !important;
     }
 
@@ -230,7 +241,7 @@ st.markdown(
         position: relative !important;
         width: 100% !important;
         height: 85px !important;
-        margin-top: 2.2rem !important;
+        margin-top: 1.35rem !important;
         margin-bottom: 0.6rem !important;
         pointer-events: none !important;
         overflow: visible !important;
@@ -1040,6 +1051,31 @@ report_data = load_report()
 records_data = load_records()
 
 
+@st.cache_data
+def get_sanitized_files() -> dict:
+    rep = load_report()
+    if not rep:
+        return {}
+    files = [f for f in rep.get("files", []) if f.get("status") == "sanitized" and f.get("output")]
+    return {f["output"]: f for f in files}
+
+
+@st.cache_data
+def read_sanitized_file_cached(file_path: str) -> str:
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as fp:
+                return fp.read()
+        except Exception:
+            return ""
+    return ""
+
+
+@st.cache_data
+def load_csv_cached(csv_path: str):
+    return pd.read_csv(csv_path)
+
+
 # =============================================================================
 # Top Navigation Bar Component (Single-Row Centered Alignment)
 # =============================================================================
@@ -1165,8 +1201,10 @@ def render_homepage():
             }
             .stApp {
                 background-color: #06090F !important;
+                background: #06090F !important;
+                color: #E2E8F0 !important;
             }
-            .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+            [data-testid="stAppViewContainer"], [data-testid="stMain"] {
                 padding-top: 0 !important;
                 margin-top: 0 !important;
                 background: transparent !important;
@@ -1299,19 +1337,6 @@ def render_homepage():
         unsafe_allow_html=True,
     )
 
-    # Full-viewport animated lab background (100% offline Data URI)
-    st.markdown(
-        clean_html(
-            f"""
-            <div class="hero-lab-fixed-wrap">
-                <img src="{LAB_BG_DATA_URI}" alt="Lab Background Animation" />
-                <div class="hero-lab-tint-scrim"></div>
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
-
     # 1. Unified Dark Fluted Architectural Hero Frame (Edge-to-Edge min-height: 100vh)
     with st.container(key="dark_hero_container"):
         # Hero Nav inside Frame with Engaging Hover & Active States
@@ -1358,7 +1383,7 @@ def render_homepage():
         st.markdown(
             clean_html(
                 """
-                <div class="hero-architectural-scene" style="margin-top: 2.2rem !important; margin-bottom: 0.6rem !important; overflow: visible !important;">
+                <div class="hero-architectural-scene" style="margin-top: 1.35rem !important; margin-bottom: 0.6rem !important; overflow: visible !important;">
                     <!-- Desk Surface & Smoked-Glass Slab -->
                     <div style="position: absolute; bottom: 28px; left: 0; right: 0; height: 38px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(30, 41, 59, 0.5) 40%, rgba(7, 10, 16, 0.88) 100%); border-top: 1.5px solid rgba(255, 255, 255, 0.38); box-shadow: 0 -8px 25px rgba(0, 245, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); transform: perspective(800px) rotateX(16deg); transform-origin: bottom center;"></div>
                     
@@ -1527,7 +1552,8 @@ def render_homepage():
 # =============================================================================
 # 3D Holographic WebGL / HTML5 Canvas Firewall Component (100% Offline)
 # =============================================================================
-def render_3d_firewall():
+@st.cache_data
+def get_3d_firewall_html() -> str:
     html_code = """
     <!DOCTYPE html>
     <html>
@@ -1818,7 +1844,11 @@ def render_3d_firewall():
     </body>
     </html>
     """
-    components.html(html_code, height=395)
+    return html_code
+
+
+def render_3d_firewall():
+    components.html(get_3d_firewall_html(), height=395)
 
 
 # =============================================================================
@@ -2024,19 +2054,6 @@ def render_architecture():
                 color: #E2E8F0 !important;
             }
             </style>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
-
-    # Full-viewport animated healthcare network background (100% offline Data URI)
-    st.markdown(
-        clean_html(
-            f"""
-            <div class="arch-bg-fixed-wrap">
-                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" />
-                <div class="arch-bg-tint-scrim"></div>
-            </div>
             """
         ),
         unsafe_allow_html=True,
@@ -2648,19 +2665,6 @@ def render_live_sandbox():
         unsafe_allow_html=True,
     )
 
-    # Full-viewport animated microscope lab background (100% offline Data URI)
-    st.markdown(
-        clean_html(
-            f"""
-            <div class="sand-bg-fixed-wrap">
-                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" />
-                <div class="sand-bg-tint-scrim"></div>
-            </div>
-            """
-        ),
-        unsafe_allow_html=True,
-    )
-
     # Top Editorial Header (Matching Homepage & Architecture 1:1)
     with st.container(key="sand_top_nav_container"):
         render_top_nav(is_dark=True)
@@ -2926,36 +2930,33 @@ def render_live_sandbox():
                 unsafe_allow_html=True,
             )
 
-            if report_data:
-                sanitized_files = [f for f in report_data.get("files", []) if f.get("status") == "sanitized" and f.get("output")]
-                file_choices = {f["output"]: f for f in sanitized_files}
+            file_choices = get_sanitized_files()
+            if file_choices:
                 sel_file = st.selectbox("Select File to View:", list(file_choices.keys()), key="file_diff_sel")
                 f_meta = file_choices[sel_file]
 
                 out_path = os.path.join(OUTPUT_DIR, sel_file)
-                if os.path.exists(out_path):
-                    with open(out_path, "r", encoding="utf-8", errors="ignore") as fp:
-                        content = fp.read()
+                content = read_sanitized_file_cached(out_path)
 
-                    c_f_l, c_f_r = st.columns(2)
-                    with c_f_l:
-                        st.markdown(f"**Sanitized File:** `{sel_file}`")
-                        st.markdown(f"**Input Hash:** `{f_meta.get('input_sha256', '')[:20]}...`")
-                        if sel_file.endswith(".csv"):
-                            try:
-                                df = pd.read_csv(out_path)
-                                st.dataframe(df.head(15), use_container_width=True)
-                            except Exception as e:
-                                st.text(f"CSV read: {e}")
-                        elif sel_file.endswith(".json") or sel_file.endswith(".jsonl"):
-                            try:
-                                j_data = json.loads(content)
-                                st.json(j_data)
-                            except Exception:
-                                st.text(content[:1000])
-                        else:
-                            st.markdown("**Sanitized Content:**")
-                            st.code(content, language="markdown")
+                c_f_l, c_f_r = st.columns(2)
+                with c_f_l:
+                    st.markdown(f"**Sanitized File:** `{sel_file}`")
+                    st.markdown(f"**Input Hash:** `{f_meta.get('input_sha256', '')[:20]}...`")
+                    if sel_file.endswith(".csv"):
+                        try:
+                            df = load_csv_cached(out_path)
+                            st.dataframe(df.head(15), use_container_width=True)
+                        except Exception as e:
+                            st.text(f"CSV read: {e}")
+                    elif sel_file.endswith(".json") or sel_file.endswith(".jsonl"):
+                        try:
+                            j_data = json.loads(content)
+                            st.json(j_data)
+                        except Exception:
+                            st.text(content[:1000])
+                    else:
+                        st.markdown("**Sanitized Content:**")
+                        st.code(content, language="markdown")
 
                     with c_f_r:
                         st.markdown("**Protection Verification & Compliance:**")
@@ -3137,6 +3138,89 @@ def render_live_sandbox():
 
 
 # =============================================================================
+# Persistent Background GIF Layer & CSS Viewport Controller
+# =============================================================================
+@st.cache_data
+def get_persistent_bg_html() -> str:
+    return clean_html(
+        f"""
+        <div id="persistent-bg-container" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; background: #06090F; background-color: #06090F;">
+            <!-- Homepage Lab Background Layer -->
+            <div class="hero-lab-fixed-wrap persistent-bg-layer bg-layer-home" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
+                <img src="{LAB_BG_DATA_URI}" alt="Lab Background Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: saturate(0.8) contrast(1.15);" />
+                <div class="hero-lab-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.58) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+            </div>
+            <!-- Architecture Healthcare Network Layer -->
+            <div class="arch-bg-fixed-wrap persistent-bg-layer bg-layer-arch" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
+                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: saturate(0.95) contrast(1.12);" />
+                <div class="arch-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.58) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+            </div>
+            <!-- Live Sandbox Microscope Layer -->
+            <div class="sand-bg-fixed-wrap persistent-bg-layer bg-layer-sand" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
+                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: invert(0.90) hue-rotate(180deg) saturate(1.15) contrast(1.12);" />
+                <div class="sand-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.58) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+            </div>
+        </div>
+        """
+    )
+
+
+def get_bg_toggle_css(active_page: str) -> str:
+    common_css = """
+    .stApp {
+        background-color: #06090F !important;
+        background: #06090F !important;
+        color: #E2E8F0 !important;
+    }
+    div[data-testid="stElementContainer"]:has(#persistent-bg-container) {
+        position: absolute !important;
+        height: 0px !important;
+        width: 0px !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        pointer-events: none !important;
+    }
+    [data-stale="true"] { opacity: 1 !important; transition: none !important; }
+    [data-testid="stStatusWidget"] { display: none !important; }
+    """
+    if active_page == "Homepage":
+        return clean_html(
+            f"""
+            <style>
+            {common_css}
+            .bg-layer-home {{ opacity: 0.36 !important; visibility: visible !important; }}
+            .bg-layer-arch {{ opacity: 0 !important; visibility: hidden !important; }}
+            .bg-layer-sand {{ opacity: 0 !important; visibility: hidden !important; }}
+            </style>
+            """
+        )
+    elif active_page == "Architecture":
+        return clean_html(
+            f"""
+            <style>
+            {common_css}
+            .bg-layer-home {{ opacity: 0 !important; visibility: hidden !important; }}
+            .bg-layer-arch {{ opacity: 0.38 !important; visibility: visible !important; }}
+            .bg-layer-sand {{ opacity: 0 !important; visibility: hidden !important; }}
+            </style>
+            """
+        )
+    else:  # Live Sandbox
+        return clean_html(
+            f"""
+            <style>
+            {common_css}
+            .bg-layer-home {{ opacity: 0 !important; visibility: hidden !important; }}
+            .bg-layer-arch {{ opacity: 0 !important; visibility: hidden !important; }}
+            .bg-layer-sand {{ opacity: 0.42 !important; visibility: visible !important; }}
+            </style>
+            """
+        )
+
+
+# =============================================================================
 # Main Router
 # =============================================================================
 def main():
@@ -3180,6 +3264,11 @@ def main():
 
     # Route Page
     active_page = st.session_state.get("page") or st.session_state.get("current_page", "Homepage")
+
+    # Persistent edge-to-edge background GIF layers mounted outside conditionals (0 bytes re-sent on tab switch)
+    st.markdown(get_persistent_bg_html(), unsafe_allow_html=True)
+    st.markdown(get_bg_toggle_css(active_page), unsafe_allow_html=True)
+
     if active_page == "Homepage":
         render_homepage()
     elif active_page == "Architecture":
