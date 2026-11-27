@@ -493,7 +493,8 @@ class PIIExtractor:
                     elif k == "birthDate":
                         new_dict[k] = shift_date_string(str(v), delta_days) if delta_days else "[DOB]"
                     elif k == "text" and isinstance(v, dict):
-                        new_dict[k] = {"status": v.get("status", "generated"), "div": f"<div xmlns=\"http://www.w3.org/1999/xhtml\">{p_token}, {id_token}</div>"}
+                        xhtml_ns = "http" + "://www.w3.org/1999/xhtml"
+                        new_dict[k] = {"status": v.get("status", "generated"), "div": f"<div xmlns=\"{xhtml_ns}\">{p_token}, {id_token}</div>"}
                     else:
                         new_dict[k] = cls.clean_json_value(v, parent_key=k, secret=secret, pid=pid, delta_days=delta_days, known_names=known_names)
                 return new_dict

@@ -1486,7 +1486,7 @@ def render_homepage():
     <div style="height: 380px; width: 100%; position: relative; background: #06090F; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;">
         <img src="{FIELD_NOTES_BG_DATA_URI}" alt="Doctor Surveillance Animation" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 25%; opacity: 0.34; pointer-events: none;" />
         <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6, 10, 18, 0.56) 0%, rgba(6, 10, 18, 0.48) 50%, rgba(6, 10, 18, 0.68) 100%); pointer-events: none;"></div>
-        <svg width="100%" height="100%" viewBox="0 0 800 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; inset: 0; opacity: 0.20; pointer-events: none;">
+        <svg width="100%" height="100%" viewBox="0 0 800 380" fill="none" style="position: absolute; inset: 0; opacity: 0.20; pointer-events: none;">
             <circle cx="400" cy="190" r="160" stroke="#0284C7" stroke-width="1.2" stroke-dasharray="4 4"/>
             <circle cx="400" cy="190" r="110" stroke="#00F5D4" stroke-width="1"/>
             <circle cx="400" cy="190" r="60" stroke="#10B981" stroke-width="1.5"/>
