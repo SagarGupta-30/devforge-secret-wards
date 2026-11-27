@@ -60,8 +60,8 @@ st.markdown(
 <style>
     /* Global App Canvas: Deep Obsidian */
     .stApp {
-        background-color: #06090F !important;
-        background: #06090F !important;
+        background-color: #060A12 !important;
+        background: #060A12 !important;
         color: #E2E8F0 !important;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
@@ -169,8 +169,8 @@ st.markdown(
         height: 100vh !important;
         object-fit: cover !important;
         object-position: center 30% !important;
-        opacity: 0.88 !important;
-        filter: brightness(1.35) contrast(1.15) saturate(1.10) !important;
+        opacity: 0.34 !important;
+        filter: brightness(0.95) contrast(1.18) saturate(1.25) !important;
         pointer-events: none !important;
     }
     .hero-lab-tint-scrim {
@@ -178,8 +178,8 @@ st.markdown(
         inset: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
-        background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.62) 85%),
-                    rgba(6, 10, 18, 0.30) !important;
+        background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%),
+                    rgba(6, 10, 18, 0.32) !important;
         pointer-events: none !important;
     }
 
@@ -198,7 +198,7 @@ st.markdown(
         color: #FFFFFF !important;
         margin: 0 0 0.75rem 0 !important;
         letter-spacing: -0.02em !important;
-        text-shadow: 0 4px 28px rgba(0, 0, 0, 0.92), 0 1px 6px rgba(0, 0, 0, 0.95) !important;
+        text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 0.98) !important;
         position: relative !important;
         z-index: 10 !important;
     }
@@ -209,7 +209,7 @@ st.markdown(
         max-width: 640px !important;
         margin: 0 auto 0.95rem auto !important;
         line-height: 1.55 !important;
-        text-shadow: 0 3px 20px rgba(0, 0, 0, 0.98), 0 1px 6px rgba(0, 0, 0, 0.95), 0 0 12px rgba(6, 10, 18, 0.95) !important;
+        text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 0.98) !important;
         position: relative !important;
         z-index: 10 !important;
     }
@@ -247,7 +247,7 @@ st.markdown(
         position: relative !important;
         width: 100% !important;
         height: 85px !important;
-        margin-top: 1.1rem !important;
+        margin-top: 0.85rem !important;
         margin-bottom: 0.6rem !important;
         pointer-events: none !important;
         overflow: visible !important;
@@ -1206,8 +1206,8 @@ def render_homepage():
                 visibility: hidden !important;
             }
             .stApp {
-                background-color: #06090F !important;
-                background: #06090F !important;
+                background-color: #060A12 !important;
+                background: #060A12 !important;
                 color: #E2E8F0 !important;
             }
             [data-testid="stAppViewContainer"], [data-testid="stMain"] {
@@ -1389,7 +1389,7 @@ def render_homepage():
         st.markdown(
             clean_html(
                 """
-                <div class="hero-architectural-scene" style="margin-top: 1.1rem !important; margin-bottom: 0.6rem !important; overflow: visible !important;">
+                <div class="hero-architectural-scene" style="margin-top: 0.85rem !important; margin-bottom: 0.6rem !important; overflow: visible !important;">
                     <!-- Desk Surface & Smoked-Glass Slab -->
                     <div style="position: absolute; bottom: 28px; left: 0; right: 0; height: 38px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(30, 41, 59, 0.5) 40%, rgba(7, 10, 16, 0.88) 100%); border-top: 1.5px solid rgba(255, 255, 255, 0.38); box-shadow: 0 -8px 25px rgba(0, 245, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); transform: perspective(800px) rotateX(16deg); transform-origin: bottom center;"></div>
                     
@@ -1872,8 +1872,8 @@ def render_architecture():
                 visibility: hidden !important;
             }
             .stApp {
-                background-color: #06090F !important;
-                background: #06090F !important;
+                background-color: #060A12 !important;
+                background: #060A12 !important;
                 color: #E2E8F0 !important;
             }
             .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
@@ -1943,8 +1943,8 @@ def render_architecture():
                 height: 100vh !important;
                 object-fit: cover !important;
                 object-position: center 35% !important;
-                opacity: 0.85 !important;
-                filter: brightness(1.25) contrast(1.12) saturate(1.05) !important;
+                opacity: 0.34 !important;
+                filter: brightness(0.95) contrast(1.18) saturate(1.25) !important;
                 pointer-events: none !important;
             }
             .arch-bg-tint-scrim {
@@ -1952,7 +1952,8 @@ def render_architecture():
                 inset: 0 !important;
                 width: 100vw !important;
                 height: 100vh !important;
-                background: radial-gradient(circle at 55% 45%, rgba(6, 10, 18, 0.12) 0%, rgba(6, 10, 18, 0.48) 85%), rgba(6, 10, 18, 0.20) !important;
+                background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%),
+                            rgba(6, 10, 18, 0.32) !important;
                 pointer-events: none !important;
             }
             div[data-testid="stElementContainer"]:has(.arch-bg-fixed-wrap) {
@@ -2360,8 +2361,8 @@ def render_live_sandbox():
                 visibility: hidden !important;
             }
             .stApp {
-                background-color: #06090F !important;
-                background: #06090F !important;
+                background-color: #060A12 !important;
+                background: #060A12 !important;
                 color: #E2E8F0 !important;
             }
             .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
@@ -2403,8 +2404,8 @@ def render_live_sandbox():
                 height: 100vh !important;
                 object-fit: cover !important;
                 z-index: 0 !important;
-                opacity: 0.85 !important;
-                filter: invert(0.90) hue-rotate(180deg) brightness(1.25) contrast(1.12) saturate(1.15) !important;
+                opacity: 0.34 !important;
+                filter: invert(0.90) hue-rotate(180deg) brightness(0.95) contrast(1.18) saturate(1.25) !important;
                 pointer-events: none !important;
             }
             .sand-bg-tint-scrim {
@@ -2412,7 +2413,8 @@ def render_live_sandbox():
                 inset: 0 !important;
                 width: 100vw !important;
                 height: 100vh !important;
-                background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.12) 0%, rgba(6, 10, 18, 0.48) 85%), rgba(6, 10, 18, 0.20) !important;
+                background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%),
+                            rgba(6, 10, 18, 0.32) !important;
                 pointer-events: none !important;
             }
             div[data-testid="stElementContainer"]:has(.sand-bg-fixed-wrap) {
@@ -3150,21 +3152,21 @@ def render_live_sandbox():
 def get_persistent_bg_html() -> str:
     return clean_html(
         f"""
-        <div id="persistent-bg-container" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; background: #06090F; background-color: #06090F;">
+        <div id="persistent-bg-container" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; background: #060A12; background-color: #060A12;">
             <!-- Homepage Lab Background Layer -->
             <div class="hero-lab-fixed-wrap persistent-bg-layer bg-layer-home" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{LAB_BG_DATA_URI}" alt="Lab Background Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: brightness(1.38) contrast(1.15) saturate(1.10);" />
-                <div class="hero-lab-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.62) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+                <img src="{LAB_BG_DATA_URI}" alt="Lab Background Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.34; filter: brightness(0.95) contrast(1.18) saturate(1.25);" />
+                <div class="hero-lab-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%), rgba(6, 10, 18, 0.32) !important;"></div>
             </div>
             <!-- Architecture Healthcare Network Layer -->
             <div class="arch-bg-fixed-wrap persistent-bg-layer bg-layer-arch" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: brightness(1.30) contrast(1.15) saturate(1.05);" />
-                <div class="arch-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.10) 0%, rgba(6, 10, 18, 0.45) 85%), rgba(6, 10, 18, 0.18) !important;"></div>
+                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.34; filter: brightness(0.95) contrast(1.18) saturate(1.25);" />
+                <div class="arch-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%), rgba(6, 10, 18, 0.32) !important;"></div>
             </div>
             <!-- Live Sandbox Microscope Layer -->
             <div class="sand-bg-fixed-wrap persistent-bg-layer bg-layer-sand" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: invert(0.90) hue-rotate(180deg) brightness(1.30) contrast(1.15) saturate(1.20);" />
-                <div class="sand-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.10) 0%, rgba(6, 10, 18, 0.45) 85%), rgba(6, 10, 18, 0.18) !important;"></div>
+                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.34; filter: invert(0.90) hue-rotate(180deg) brightness(0.95) contrast(1.18) saturate(1.25);" />
+                <div class="sand-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%), rgba(6, 10, 18, 0.32) !important;"></div>
             </div>
         </div>
         """
@@ -3174,8 +3176,8 @@ def get_persistent_bg_html() -> str:
 def get_bg_toggle_css(active_page: str) -> str:
     common_css = """
     .stApp {
-        background-color: #06090F !important;
-        background: #06090F !important;
+        background-color: #060A12 !important;
+        background: #060A12 !important;
         color: #E2E8F0 !important;
     }
     div[data-testid="stElementContainer"]:has(#persistent-bg-container) {
@@ -3196,7 +3198,7 @@ def get_bg_toggle_css(active_page: str) -> str:
             f"""
             <style>
             {common_css}
-            .bg-layer-home {{ opacity: 0.85 !important; visibility: visible !important; }}
+            .bg-layer-home {{ opacity: 1 !important; visibility: visible !important; }}
             .bg-layer-arch {{ opacity: 0 !important; visibility: hidden !important; }}
             .bg-layer-sand {{ opacity: 0 !important; visibility: hidden !important; }}
             </style>
@@ -3208,7 +3210,7 @@ def get_bg_toggle_css(active_page: str) -> str:
             <style>
             {common_css}
             .bg-layer-home {{ opacity: 0 !important; visibility: hidden !important; }}
-            .bg-layer-arch {{ opacity: 0.75 !important; visibility: visible !important; }}
+            .bg-layer-arch {{ opacity: 1 !important; visibility: visible !important; }}
             .bg-layer-sand {{ opacity: 0 !important; visibility: hidden !important; }}
             </style>
             """
@@ -3220,7 +3222,7 @@ def get_bg_toggle_css(active_page: str) -> str:
             {common_css}
             .bg-layer-home {{ opacity: 0 !important; visibility: hidden !important; }}
             .bg-layer-arch {{ opacity: 0 !important; visibility: hidden !important; }}
-            .bg-layer-sand {{ opacity: 0.78 !important; visibility: visible !important; }}
+            .bg-layer-sand {{ opacity: 1 !important; visibility: visible !important; }}
             </style>
             """
         )
