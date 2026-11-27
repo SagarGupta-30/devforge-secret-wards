@@ -198,7 +198,7 @@ st.markdown(
         color: #FFFFFF !important;
         margin: 0 0 0.75rem 0 !important;
         letter-spacing: -0.02em !important;
-        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.85) !important;
+        text-shadow: 0 4px 28px rgba(0, 0, 0, 0.92), 0 1px 6px rgba(0, 0, 0, 0.95) !important;
         position: relative !important;
         z-index: 10 !important;
     }
@@ -208,7 +208,7 @@ st.markdown(
         max-width: 640px !important;
         margin: 0 auto 0.95rem auto !important;
         line-height: 1.55 !important;
-        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.85) !important;
+        text-shadow: 0 4px 28px rgba(0, 0, 0, 0.92), 0 1px 6px rgba(0, 0, 0, 0.95) !important;
         position: relative !important;
         z-index: 10 !important;
     }
@@ -234,14 +234,17 @@ st.markdown(
         transform: translate(-50%, -50%);
         width: 650px;
         height: 380px;
-        background: radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.16) 0%, rgba(0, 245, 212, 0.08) 40%, transparent 70%);
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        backdrop-filter: none !important;
         pointer-events: none !important;
     }
     .hero-architectural-scene {
         position: relative !important;
         width: 100% !important;
         height: 85px !important;
-        margin-top: 1.35rem !important;
+        margin-top: 1.1rem !important;
         margin-bottom: 0.6rem !important;
         pointer-events: none !important;
         overflow: visible !important;
@@ -1383,7 +1386,7 @@ def render_homepage():
         st.markdown(
             clean_html(
                 """
-                <div class="hero-architectural-scene" style="margin-top: 1.35rem !important; margin-bottom: 0.6rem !important; overflow: visible !important;">
+                <div class="hero-architectural-scene" style="margin-top: 1.1rem !important; margin-bottom: 0.6rem !important; overflow: visible !important;">
                     <!-- Desk Surface & Smoked-Glass Slab -->
                     <div style="position: absolute; bottom: 28px; left: 0; right: 0; height: 38px; background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(30, 41, 59, 0.5) 40%, rgba(7, 10, 16, 0.88) 100%); border-top: 1.5px solid rgba(255, 255, 255, 0.38); box-shadow: 0 -8px 25px rgba(0, 245, 212, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.25); backdrop-filter: blur(8px); transform: perspective(800px) rotateX(16deg); transform-origin: bottom center;"></div>
                     
@@ -3147,18 +3150,18 @@ def get_persistent_bg_html() -> str:
         <div id="persistent-bg-container" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; background: #06090F; background-color: #06090F;">
             <!-- Homepage Lab Background Layer -->
             <div class="hero-lab-fixed-wrap persistent-bg-layer bg-layer-home" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{LAB_BG_DATA_URI}" alt="Lab Background Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: saturate(0.8) contrast(1.15);" />
-                <div class="hero-lab-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.58) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+                <img src="{LAB_BG_DATA_URI}" alt="Lab Background Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: brightness(1.25) contrast(1.12) saturate(0.85);" />
+                <div class="hero-lab-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.14) 0%, rgba(6, 10, 18, 0.48) 85%), rgba(6, 10, 18, 0.22) !important;"></div>
             </div>
             <!-- Architecture Healthcare Network Layer -->
             <div class="arch-bg-fixed-wrap persistent-bg-layer bg-layer-arch" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: saturate(0.95) contrast(1.12);" />
-                <div class="arch-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.58) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: brightness(1.25) contrast(1.12) saturate(0.95);" />
+                <div class="arch-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.14) 0%, rgba(6, 10, 18, 0.48) 85%), rgba(6, 10, 18, 0.22) !important;"></div>
             </div>
             <!-- Live Sandbox Microscope Layer -->
             <div class="sand-bg-fixed-wrap persistent-bg-layer bg-layer-sand" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: invert(0.90) hue-rotate(180deg) saturate(1.15) contrast(1.12);" />
-                <div class="sand-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.22) 0%, rgba(6, 10, 18, 0.58) 85%), rgba(6, 10, 18, 0.30) !important;"></div>
+                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; filter: invert(0.90) hue-rotate(180deg) brightness(1.25) contrast(1.12) saturate(1.15);" />
+                <div class="sand-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.14) 0%, rgba(6, 10, 18, 0.48) 85%), rgba(6, 10, 18, 0.22) !important;"></div>
             </div>
         </div>
         """
@@ -3190,7 +3193,7 @@ def get_bg_toggle_css(active_page: str) -> str:
             f"""
             <style>
             {common_css}
-            .bg-layer-home {{ opacity: 0.36 !important; visibility: visible !important; }}
+            .bg-layer-home {{ opacity: 0.52 !important; visibility: visible !important; }}
             .bg-layer-arch {{ opacity: 0 !important; visibility: hidden !important; }}
             .bg-layer-sand {{ opacity: 0 !important; visibility: hidden !important; }}
             </style>
@@ -3202,7 +3205,7 @@ def get_bg_toggle_css(active_page: str) -> str:
             <style>
             {common_css}
             .bg-layer-home {{ opacity: 0 !important; visibility: hidden !important; }}
-            .bg-layer-arch {{ opacity: 0.38 !important; visibility: visible !important; }}
+            .bg-layer-arch {{ opacity: 0.48 !important; visibility: visible !important; }}
             .bg-layer-sand {{ opacity: 0 !important; visibility: hidden !important; }}
             </style>
             """
@@ -3214,7 +3217,7 @@ def get_bg_toggle_css(active_page: str) -> str:
             {common_css}
             .bg-layer-home {{ opacity: 0 !important; visibility: hidden !important; }}
             .bg-layer-arch {{ opacity: 0 !important; visibility: hidden !important; }}
-            .bg-layer-sand {{ opacity: 0.42 !important; visibility: visible !important; }}
+            .bg-layer-sand {{ opacity: 0.50 !important; visibility: visible !important; }}
             </style>
             """
         )
