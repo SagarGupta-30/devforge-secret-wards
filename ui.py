@@ -2766,60 +2766,117 @@ def render_live_sandbox():
             curr_script = st.session_state.get("sb_script", "Devanagari / Latin")
             curr_note = st.session_state.get("sb_clinical_note", default_clinical_note)
 
-            col_inp1, col_inp2 = st.columns(2)
-            with col_inp1:
-                st.text_input("PATIENT IDENTIFIER / MRN", value=curr_mrn, key="sb_mrn")
-            with col_inp2:
-                scripts = ["Devanagari / Latin", "Latin Only", "Devanagari Only"]
-                s_idx = scripts.index(curr_script) if curr_script in scripts else 0
-                st.selectbox("FACILITY SCRIPT", scripts, index=s_idx, key="sb_script")
+            with st.form(key="sb_firewall_form", clear_on_submit=False, border=False):
+                col_inp1, col_inp2 = st.columns(2)
+                with col_inp1:
+                    st.text_input("PATIENT IDENTIFIER / MRN", value=curr_mrn, key="sb_mrn")
+                with col_inp2:
+                    scripts = ["Devanagari / Latin", "Latin Only", "Devanagari Only"]
+                    s_idx = scripts.index(curr_script) if curr_script in scripts else 0
+                    st.selectbox("FACILITY SCRIPT", scripts, index=s_idx, key="sb_script")
 
-            user_note = st.text_area(
-                "CLINICAL NOTE",
-                value=curr_note,
-                height=160,
-                key="sb_clinical_note",
-            )
+                user_note = st.text_area(
+                    "CLINICAL NOTE",
+                    value=curr_note,
+                    height=160,
+                    key="sb_clinical_note",
+                )
 
-            with st.container(key="sb_run_btn_wrap"):
-                st.button("RUN FIREWALL (1.6 MS) ↗", key="sb_run_btn", type="primary", use_container_width=True)
+                with st.container(key="sb_run_btn_wrap"):
+                    st.form_submit_button("RUN FIREWALL (1.6 MS) ↗", type="primary", use_container_width=True)
 
-            st.markdown(
-                clean_html(
-                    """
-                    <div class="font-mono" style="font-size: 0.72rem; color: #94A3B8; text-align: center; margin-top: 10px; letter-spacing: 0.04em;">
-                        Processing remains inside your browser memory.
-                    </div>
-                    """
-                ),
-                unsafe_allow_html=True,
-            )
+                st.markdown(
+                    clean_html(
+                        """
+                        <div class="font-mono" style="font-size: 0.72rem; color: #94A3B8; text-align: center; margin-top: 10px; letter-spacing: 0.04em;">
+                            Processing remains inside your browser memory.
+                        </div>
+                        """
+                    ),
+                    unsafe_allow_html=True,
+                )
 
-        # Process live execution
-        t0 = time.perf_counter()
-        _, placeholders = ClinicalShield.protect(user_note)
-        sanitized_result = PIIExtractor.clean_free_text(user_note, pid="PSN-8BC683A19F", delta_days=-40)
-        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+        # Process live execution with live form/state extraction
+        active_note = (user_note if user_note is not None else st.session_state.get("sb_clinical_note", "")).strip()
+
+        if not active_note:
+            ready_badge = "● AWAITING INPUT (0.0 MS)"
+            content_section = """
+            <div style="background: rgba(6, 10, 18, 0.75); border-radius: 14px; padding: 32px 24px; min-height: 190px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 1px dashed rgba(56, 189, 248, 0.35); margin-bottom: 1.5rem;">
+                <div style="font-size: 1.8rem; margin-bottom: 10px;">🛡️</div>
+                <div class="font-mono" style="color: #F8FAFC; font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; letter-spacing: 0.02em;">
+                    Input clinical note is empty
+                </div>
+                <div class="font-mono" style="color: #94A3B8; font-size: 0.82rem; max-width: 440px; line-height: 1.6;">
+                    Input clinical note is empty — type any clinical text on the left or click a Judge Trap Preset above, then press RUN FIREWALL.
+                </div>
+            </div>
+            """
+            plain_text_box = ""
+            hmac_name = "doc_quarantine_idle.txt"
+            vault_msg = "0 Blocked SHA-256 Hashes"
+        else:
+            import hashlib as _hl
+            import html as _ht
+            import re as _re
+
+            def _format_diff_html(cleaned_text: str, placeholders: dict, delta_days: int = -40) -> str:
+                pill_psn = "background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.55); color: #7DD3FC; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
+                pill_red = "background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.50); color: #FCD34D; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
+                pill_clin = "background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
+
+                clin_pills = {k: f'<span style="{pill_clin}">🔒 {_ht.escape(v)}</span>' for k, v in placeholders.items()}
+                escaped = _ht.escape(cleaned_text)
+                for k, v in clin_pills.items():
+                    escaped = escaped.replace(k, v)
+
+                escaped = _re.sub(r'\[PSN-[A-Za-z0-9_-]+\]', lambda m: f'<span style="{pill_psn}">{m.group(0)}</span>', escaped)
+                escaped = _re.sub(r'(\([SDWsdw]/o\s+)?\[[A-Z0-9_]+\](\))?', lambda m: f'<span style="{pill_red}">{m.group(0)}</span>', escaped)
+                escaped = _re.sub(r'\b\d{2}/\d{2}/\d{4}\b', lambda m: f'<span style="{pill_red}">📅 {m.group(0)} ({delta_days}d)</span>', escaped)
+                escaped = _re.sub(r'\b\d{4}-\d{2}-\d{2}\b', lambda m: f'<span style="{pill_red}">📅 {m.group(0)} ({delta_days}d)</span>', escaped)
+                return escaped
+
+            t0 = time.perf_counter()
+            prot_text, placeholders = ClinicalShield.protect(active_note)
+            sanitized_result = PIIExtractor.clean_free_text(prot_text, pid="PSN-8BC683A19F", delta_days=-40)
+            restored_text = ClinicalShield.restore(sanitized_result, placeholders)
+            elapsed_ms = max((time.perf_counter() - t0) * 1000.0, 0.8)
+            ready_badge = f"● READY ({elapsed_ms:.1f} MS)"
+
+            diff_pills_inner = _format_diff_html(sanitized_result, placeholders, -40)
+            content_section = f"""
+            <div style="background: rgba(6, 10, 18, 0.75); border-radius: 14px; padding: 18px; min-height: 180px; line-height: 2.1; margin-bottom: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.08);">
+                {diff_pills_inner}
+            </div>
+            """
+            plain_text_box = f"""
+            <div style="background: rgba(4, 7, 13, 0.90); border-radius: 10px; padding: 12px 14px; margin-bottom: 1.2rem; border: 1px solid rgba(56, 189, 248, 0.22); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span class="font-mono" style="font-size: 0.68rem; color: #38BDF8; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;">
+                        PLAIN SANITIZED TEXT
+                    </span>
+                    <span class="font-mono" style="font-size: 0.65rem; color: #64748B;">RECONSTRUCTED STRING</span>
+                </div>
+                <div class="font-mono" style="font-size: 0.82rem; color: #F8FAFC; line-height: 1.55; word-break: break-word; user-select: text;">
+                    {_ht.escape(restored_text)}
+                </div>
+            </div>
+            """
+            note_hash = _hl.sha256(active_note.encode()).hexdigest()[:10]
+            hmac_name = f"doc_{note_hash}.txt"
+            vault_msg = "8 Blocked SHA-256 Hashes"
 
         with c_sand_r:
             card_output_html = f"""
             <div style="background: rgba(10, 16, 28, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 18px; padding: 1.8rem; box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6); color: #FFFFFF;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.8rem;">
                     <span class="font-mono" style="font-size: 0.75rem; color: #94A3B8; letter-spacing: 0.12em; font-weight: 600; text-transform: uppercase;">SANITIZED OUTPUT</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 999px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;" class="font-mono">● READY ({elapsed_ms:.1f} MS)</span>
+                    <span style="background: rgba(16, 185, 129, 0.18); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 999px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;" class="font-mono">{ready_badge}</span>
                 </div>
                 <h3 class="font-mono" style="font-size: 1.15rem; margin: 0 0 1.2rem 0; color: #FFFFFF; font-weight: 700;">Clinical Diff / 001</h3>
                 
-                <div style="background: rgba(6, 10, 18, 0.75); border-radius: 14px; padding: 18px; min-height: 190px; line-height: 2.1; margin-bottom: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <span style="background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.55); color: #7DD3FC; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">[PSN-8BC683A19F]</span>
-                    <span style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.50); color: #FCD34D; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">(S/o [RELATIVE_NAME]), Mob: [PHONE], Village [VILLAGE],</span>
-                    <span style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.50); color: #FCD34D; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">admitted 19/05/2024 (-40d) under</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">🔒 Dr. Ramesh Srivastava.</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">🔒 K/C/O Type 2 Diabetes Mellitus,</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">🔒 C/O fever x 4 days.</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">🔒 BP 118/78 mmHg.</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.85rem;">🔒 Rx: Tab Dolo 650 mg 1-0-1.</span>
-                </div>
+                {content_section}
+                {plain_text_box}
                 
                 <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 1.2rem; font-size: 0.72rem; color: #94A3B8;" class="font-mono">
                     <span><span style="color: #38BDF8;">●</span> PSEUDONYM</span>
@@ -2830,11 +2887,11 @@ def render_live_sandbox():
                 <div style="background: rgba(4, 7, 13, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;" class="font-mono">
                     <div>
                         <div style="font-size: 0.65rem; color: #64748B; letter-spacing: 0.12em; text-transform: uppercase;">HMAC FILENAME</div>
-                        <div style="font-size: 0.85rem; color: #E2E8F0; font-weight: 700; margin-top: 2px;">doc_6df3fcd54e.txt</div>
+                        <div style="font-size: 0.85rem; color: #E2E8F0; font-weight: 700; margin-top: 2px;">{hmac_name}</div>
                     </div>
                     <div style="text-align: right;">
                         <div style="font-size: 0.65rem; color: #64748B; letter-spacing: 0.12em; text-transform: uppercase;">QUARANTINE VAULT</div>
-                        <div style="font-size: 0.82rem; color: #34D399; font-weight: 700; margin-top: 2px;">8 Blocked SHA-256 Hashes</div>
+                        <div style="font-size: 0.82rem; color: #34D399; font-weight: 700; margin-top: 2px;">{vault_msg}</div>
                     </div>
                 </div>
             </div>
