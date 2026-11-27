@@ -2380,8 +2380,8 @@ def render_live_sandbox():
                 height: 100vh !important;
                 object-fit: cover !important;
                 z-index: 0 !important;
-                opacity: 0.38 !important;
-                filter: invert(0.92) hue-rotate(180deg) saturate(1.45) contrast(1.15) !important;
+                opacity: 0.44 !important;
+                filter: invert(0.90) hue-rotate(180deg) saturate(1.15) contrast(1.12) !important;
                 pointer-events: none !important;
             }
             .sand-bg-tint-scrim {
@@ -2389,7 +2389,7 @@ def render_live_sandbox():
                 inset: 0 !important;
                 width: 100vw !important;
                 height: 100vh !important;
-                background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.25) 0%, rgba(6, 10, 18, 0.62) 85%), rgba(6, 10, 18, 0.36) !important;
+                background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.18) 0%, rgba(6, 10, 18, 0.56) 85%), rgba(6, 10, 18, 0.25) !important;
                 pointer-events: none !important;
             }
             div[data-testid="stElementContainer"]:has(.sand-bg-fixed-wrap) {
@@ -2536,16 +2536,17 @@ def render_live_sandbox():
                 font-family: ui-monospace, SFMono-Regular, monospace !important;
             }
 
-            /* Run Firewall Button - Illuminated Pill */
+            /* Run Firewall Button - Crisp Solid White Pill */
             div.st-key-sb_run_btn_wrap button,
             div.st-key-sb_run_btn_wrap div.stButton > button {
-                background: linear-gradient(90deg, #38BDF8 0%, #0EA5E9 100%) !important;
+                background: #FFFFFF !important;
+                background-color: #FFFFFF !important;
                 color: #06090F !important;
                 -webkit-text-fill-color: #06090F !important;
                 font-weight: 800 !important;
                 border-radius: 999px !important;
                 border: none !important;
-                box-shadow: 0 0 20px rgba(56, 189, 248, 0.35) !important;
+                box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22) !important;
                 font-family: ui-monospace, SFMono-Regular, monospace !important;
                 font-size: 0.88rem !important;
                 letter-spacing: 0.08em !important;
@@ -2554,9 +2555,11 @@ def render_live_sandbox():
             }
             div.st-key-sb_run_btn_wrap button:hover,
             div.st-key-sb_run_btn_wrap div.stButton > button:hover {
-                box-shadow: 0 0 30px rgba(56, 189, 248, 0.65) !important;
+                box-shadow: 0 4px 26px rgba(255, 255, 255, 0.45) !important;
                 transform: translateY(-1px) !important;
-                filter: brightness(1.08) !important;
+                filter: brightness(1.05) !important;
+                background: #FFFFFF !important;
+                background-color: #FFFFFF !important;
             }
             div.st-key-sb_run_btn_wrap button p,
             div.st-key-sb_run_btn_wrap button span {
@@ -2614,26 +2617,30 @@ def render_live_sandbox():
                 border-radius: 8px !important;
             }
             div.st-key-repo_inspector_container div.stDownloadButton > button {
-                background: linear-gradient(90deg, #10B981 0%, #059669 100%) !important;
-                color: #FFFFFF !important;
-                -webkit-text-fill-color: #FFFFFF !important;
-                font-weight: 700 !important;
+                background: #FFFFFF !important;
+                background-color: #FFFFFF !important;
+                color: #06090F !important;
+                -webkit-text-fill-color: #06090F !important;
+                font-weight: 800 !important;
                 border-radius: 999px !important;
                 border: none !important;
-                box-shadow: 0 0 20px rgba(16, 185, 129, 0.35) !important;
+                box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22) !important;
                 padding: 0.65rem 1.8rem !important;
                 margin-top: 1rem !important;
                 transition: all 0.2s ease !important;
             }
             div.st-key-repo_inspector_container div.stDownloadButton > button:hover {
-                box-shadow: 0 0 28px rgba(16, 185, 129, 0.6) !important;
+                box-shadow: 0 4px 26px rgba(255, 255, 255, 0.45) !important;
                 transform: translateY(-1px) !important;
+                filter: brightness(1.05) !important;
+                background: #FFFFFF !important;
+                background-color: #FFFFFF !important;
             }
             div.st-key-repo_inspector_container div.stDownloadButton > button p,
             div.st-key-repo_inspector_container div.stDownloadButton > button span {
-                color: #FFFFFF !important;
-                -webkit-text-fill-color: #FFFFFF !important;
-                font-weight: 700 !important;
+                color: #06090F !important;
+                -webkit-text-fill-color: #06090F !important;
+                font-weight: 800 !important;
             }
             </style>
             """
@@ -2821,9 +2828,9 @@ def render_live_sandbox():
             import re as _re
 
             def _format_diff_html(cleaned_text: str, placeholders: dict, delta_days: int = -40) -> str:
-                pill_psn = "background: rgba(56, 189, 248, 0.18); border: 1px solid rgba(56, 189, 248, 0.55); color: #7DD3FC; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
-                pill_red = "background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.50); color: #FCD34D; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
-                pill_clin = "background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.50); color: #6EE7B7; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
+                pill_psn = "background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.38); color: #BAE6FD; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
+                pill_red = "background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.32); color: #CBD5E1; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
+                pill_clin = "background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.16); color: #F1F5F9; padding: 3px 9px; border-radius: 6px; font-weight: 600; display: inline-block; margin: 2px 3px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.84rem;"
 
                 clin_pills = {k: f'<span style="{pill_clin}">🔒 {_ht.escape(v)}</span>' for k, v in placeholders.items()}
                 escaped = _ht.escape(cleaned_text)
@@ -2871,7 +2878,7 @@ def render_live_sandbox():
             <div style="background: rgba(10, 16, 28, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 18px; padding: 1.8rem; box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6); color: #FFFFFF;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.8rem;">
                     <span class="font-mono" style="font-size: 0.75rem; color: #94A3B8; letter-spacing: 0.12em; font-weight: 600; text-transform: uppercase;">SANITIZED OUTPUT</span>
-                    <span style="background: rgba(16, 185, 129, 0.18); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.45); border-radius: 999px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;" class="font-mono">{ready_badge}</span>
+                    <span style="background: rgba(56, 189, 248, 0.12); color: #7DD3FC; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 999px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;" class="font-mono">{ready_badge}</span>
                 </div>
                 <h3 class="font-mono" style="font-size: 1.15rem; margin: 0 0 1.2rem 0; color: #FFFFFF; font-weight: 700;">Clinical Diff / 001</h3>
                 
@@ -2879,9 +2886,9 @@ def render_live_sandbox():
                 {plain_text_box}
                 
                 <div style="display: flex; align-items: center; gap: 18px; margin-bottom: 1.2rem; font-size: 0.72rem; color: #94A3B8;" class="font-mono">
-                    <span><span style="color: #38BDF8;">●</span> PSEUDONYM</span>
-                    <span><span style="color: #F59E0B;">●</span> REDACTED</span>
-                    <span><span style="color: #10B981;">●</span> CLINICAL LOCK</span>
+                    <span><span style="color: #BAE6FD;">●</span> PSEUDONYM</span>
+                    <span><span style="color: #CBD5E1;">●</span> REDACTED</span>
+                    <span><span style="color: #F1F5F9;">●</span> CLINICAL LOCK</span>
                 </div>
                 
                 <div style="background: rgba(4, 7, 13, 0.95); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 16px; color: #FFFFFF; display: flex; justify-content: space-between; align-items: center;" class="font-mono">
@@ -2891,7 +2898,7 @@ def render_live_sandbox():
                     </div>
                     <div style="text-align: right;">
                         <div style="font-size: 0.65rem; color: #64748B; letter-spacing: 0.12em; text-transform: uppercase;">QUARANTINE VAULT</div>
-                        <div style="font-size: 0.82rem; color: #34D399; font-weight: 700; margin-top: 2px;">{vault_msg}</div>
+                        <div style="font-size: 0.82rem; color: #7DD3FC; font-weight: 700; margin-top: 2px;">{vault_msg}</div>
                     </div>
                 </div>
             </div>
