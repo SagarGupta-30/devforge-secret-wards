@@ -1943,8 +1943,8 @@ def render_architecture():
                 height: 100vh !important;
                 object-fit: cover !important;
                 object-position: center 35% !important;
-                opacity: 0.34 !important;
-                filter: brightness(0.95) contrast(1.18) saturate(1.25) !important;
+                opacity: 0.40 !important;
+                filter: brightness(1.02) contrast(1.20) saturate(1.25) !important;
                 pointer-events: none !important;
             }
             .arch-bg-tint-scrim {
@@ -2404,8 +2404,8 @@ def render_live_sandbox():
                 height: 100vh !important;
                 object-fit: cover !important;
                 z-index: 0 !important;
-                opacity: 0.34 !important;
-                filter: invert(0.90) hue-rotate(180deg) brightness(0.95) contrast(1.18) saturate(1.25) !important;
+                opacity: 0.44 !important;
+                filter: invert(0.90) hue-rotate(180deg) brightness(1.05) contrast(1.22) saturate(1.30) !important;
                 pointer-events: none !important;
             }
             .sand-bg-tint-scrim {
@@ -2887,7 +2887,7 @@ def render_live_sandbox():
 
         with c_sand_r:
             card_output_html = f"""
-            <div style="background: rgba(10, 16, 28, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 18px; padding: 1.8rem; box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6); color: #FFFFFF;">
+            <div class="sandbox-output-card" style="background: rgba(9, 14, 24, 0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 18px; padding: 1.8rem; box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6); color: #FFFFFF;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 0.8rem;">
                     <span class="font-mono" style="font-size: 0.75rem; color: #94A3B8; letter-spacing: 0.12em; font-weight: 600; text-transform: uppercase;">SANITIZED OUTPUT</span>
                     <span style="background: rgba(56, 189, 248, 0.12); color: #7DD3FC; border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 999px; padding: 3px 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;" class="font-mono">{ready_badge}</span>
@@ -3160,12 +3160,12 @@ def get_persistent_bg_html() -> str:
             </div>
             <!-- Architecture Healthcare Network Layer -->
             <div class="arch-bg-fixed-wrap persistent-bg-layer bg-layer-arch" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.34; filter: brightness(0.95) contrast(1.18) saturate(1.25);" />
+                <img src="{ARCH_BG_DATA_URI}" alt="Healthcare Network Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.40; filter: brightness(1.02) contrast(1.20) saturate(1.25);" />
                 <div class="arch-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%), rgba(6, 10, 18, 0.32) !important;"></div>
             </div>
             <!-- Live Sandbox Microscope Layer -->
             <div class="sand-bg-fixed-wrap persistent-bg-layer bg-layer-sand" style="position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 0; transition: opacity 0.22s ease;">
-                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.34; filter: invert(0.90) hue-rotate(180deg) brightness(0.95) contrast(1.18) saturate(1.25);" />
+                <img src="{SANDBOX_BG_DATA_URI}" alt="Microscope Research Animation" style="position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; pointer-events: none; z-index: 0; opacity: 0.44; filter: invert(0.90) hue-rotate(180deg) brightness(1.05) contrast(1.22) saturate(1.30);" />
                 <div class="sand-bg-tint-scrim" style="position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(circle at 50% 45%, rgba(6, 10, 18, 0.28) 0%, rgba(6, 10, 18, 0.68) 85%), rgba(6, 10, 18, 0.32) !important;"></div>
             </div>
         </div>
